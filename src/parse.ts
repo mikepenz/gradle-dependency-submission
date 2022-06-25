@@ -101,8 +101,8 @@ export function parseGradleDependency(
     const strippedLine = line.substring(level * DEPENDENCY_LEVEL_INLINE)
 
     if (line.startsWith(DEPENDENCY_PROJECT_START)) {
-      core.warning(
-        'Found a project dependency, skipping (Currently not supported)'
+      core.info(
+        `Found a project dependency, skipping (Currently not supported) - ${line}`
       )
       iterator.next() // consume the next item
       continue
@@ -127,7 +127,7 @@ export function parseGradleDependency(
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[1])
     ) {
-      core.info(
+      core.debug(
         `Found a child dependency at an unsupported level, skipping. '${strippedLine}'`
       )
       iterator.next() // consume the next item
