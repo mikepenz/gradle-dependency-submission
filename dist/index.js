@@ -43,6 +43,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const process_1 = __nccwpck_require__(1647);
+const path = __importStar(__nccwpck_require__(1017));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         //https://github.com/actions/go-dependency-submission/blob/main/src/index.ts
@@ -53,8 +54,22 @@ function run() {
         const gradleBuildModule = core.getInput('gradle-build-module');
         const gradleBuildConfiguration = core.getInput('gradle-build-configuration');
         const gradleDependencyPath = core.getInput('gradle-dependency-path');
-        const directDeps = yield (0, process_1.processGradleGraph)(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
-        const manifest = new dependency_submission_toolkit_1.Manifest(gradleBuildConfiguration, gradleDependencyPath);
+        const { packageCache, directDependencies, indirectDependencies } = yield (0, process_1.processGradleGraph)(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        const manifest = new dependency_submission_toolkit_1.Manifest(gradleBuildConfiguration, path.join(gradleProjectPath, gradleDependencyPath));
+        for (const pkgUrl of directDependencies) {
+            const dep = packageCache.lookupPackage(pkgUrl);
+            if (!dep) {
+                throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache');
+            }
+            manifest.addDirectDependency(dep);
+        }
+        for (const pkgUrl of indirectDependencies) {
+            const dep = packageCache.lookupPackage(pkgUrl);
+            if (!dep) {
+                throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache');
+            }
+            manifest.addIndirectDependency(dep);
+        }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
             url: 'https://github.com/actions/go-dependency-submission',
@@ -248,28 +263,38 @@ function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildCon
         const dependencyList = yield processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         /* add all direct and indirect packages to a new PackageCache */
         const cache = new dependency_submission_toolkit_1.PackageCache();
-        dependencyList.forEach(([parent, child]) => {
+        const directDependencies = [];
+        const indirectDependencies = [];
+        for (const [parent, child] of dependencyList) {
             cache.package(parent);
             if (child !== undefined) {
                 cache.package(child);
+                directDependencies.push(child);
             }
-        });
-        dependencyList.forEach(([parent, child]) => {
+            else {
+                directDependencies.push(parent);
+            }
+        }
+        for (const [parent, child] of dependencyList) {
             if (!child)
-                return; // we can only connect the child to the parent if it exists
+                continue; // we can only connect the child to the parent if it exists
             /* Look up the parent package in the cache. go mod graph will return
              * multiple versions of packages with the same namespace and name. We
              * select only package versions used in the Go build target. */
             const targetPackage = cache.lookupPackage(parent);
             if (!targetPackage)
-                return;
+                continue;
             const childPackage = cache.lookupPackage(child);
             if (!childPackage)
-                return;
+                continue;
             // create the dependency relationship
             targetPackage.dependsOn(childPackage);
-        });
-        return cache;
+        }
+        return {
+            packageCache: cache,
+            directDependencies,
+            indirectDependencies
+        };
     });
 }
 exports.processGradleGraph = processGradleGraph;

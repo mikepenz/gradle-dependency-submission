@@ -5,10 +5,10 @@ import {PackageCache} from '@github/dependency-submission-toolkit'
 import {parseGradleGraph} from './parse'
 
 export async function processGradleGraph(
-    gradleProjectPath: string,
+  gradleProjectPath: string,
   gradleBuildModule: string,
   gradleBuildConfiguration: string
-): Promise<PackageCache> {
+): Promise<Result> {
   const dependencyList = await processDependencyList(
     gradleProjectPath,
     gradleBuildModule,
@@ -17,30 +17,40 @@ export async function processGradleGraph(
 
   /* add all direct and indirect packages to a new PackageCache */
   const cache = new PackageCache()
-  dependencyList.forEach(([parent, child]) => {
+  const directDependencies: PackageURL[] = []
+  const indirectDependencies: PackageURL[] = []
+
+  for (const [parent, child] of dependencyList) {
     cache.package(parent)
     if (child !== undefined) {
       cache.package(child)
+      directDependencies.push(child)
+    } else {
+      directDependencies.push(parent)
     }
-  })
+  }
 
-  dependencyList.forEach(([parent, child]) => {
-    if (!child) return // we can only connect the child to the parent if it exists
+  for (const [parent, child] of dependencyList) {
+    if (!child) continue // we can only connect the child to the parent if it exists
     /* Look up the parent package in the cache. go mod graph will return
      * multiple versions of packages with the same namespace and name. We
      * select only package versions used in the Go build target. */
     const targetPackage = cache.lookupPackage(parent)
-    if (!targetPackage) return
+    if (!targetPackage) continue
     const childPackage = cache.lookupPackage(child)
-    if (!childPackage) return
+    if (!childPackage) continue
     // create the dependency relationship
     targetPackage.dependsOn(childPackage)
-  })
-  return cache
+  }
+  return {
+    packageCache: cache,
+    directDependencies,
+    indirectDependencies
+  }
 }
 
 export async function processDependencyList(
-    gradleProjectPath: string,
+  gradleProjectPath: string,
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<[PackageURL, PackageURL | undefined][]> {
@@ -55,9 +65,17 @@ export async function processDependencyList(
   )
   if (dependencyList.exitCode !== 0) {
     core.error(dependencyList.stderr)
-    core.setFailed(`'gradle ${gradleBuildModule}:dependencies resolution' failed!`)
+    core.setFailed(
+      `'gradle ${gradleBuildModule}:dependencies resolution' failed!`
+    )
     throw new Error("Failed to execute 'gradle dependencies'")
   }
 
   return parseGradleGraph(dependencyList.stdout)
+}
+
+interface Result {
+  packageCache: PackageCache
+  directDependencies: PackageURL[]
+  indirectDependencies: PackageURL[]
 }

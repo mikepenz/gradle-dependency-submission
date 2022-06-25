@@ -15,7 +15,7 @@ inputs:
     default: ''
   gradle-dependency-path:
     required: true
-    description: 'Path to the file containing the dependency specification. Defaults to the root `build.gradle`'
+    description: 'Path to the file containing the dependency specification. Relative to the provided project-path. Defaults to the root `build.gradle`'
     default: 'build.gradle'
   gradle-build-module:
     required: true
