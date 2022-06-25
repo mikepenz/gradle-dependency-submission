@@ -1,0 +1,35 @@
+name: Gradle Dependency Submission
+on:
+  push:
+    branches:
+      - main
+
+# The API requires write permission on the repository to submit dependencies
+permissions:
+  contents: write
+
+jobs:
+  gradle-action-detection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Gradle Build Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            !~/.gradle/wrapper/dists/**/gradle*.zip
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+          
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v3
+
+      - name: Run snapshot action
+        uses: mikepenz/gradle-dependency-submission@main
+        with:
+          gradle-project-path: "gradle-example"
+          gradle-dependency-path: "app/build.gradle"
+          gradle-build-module: ":app"
+          gradle-build-configuration: "debugCompileClasspath"
