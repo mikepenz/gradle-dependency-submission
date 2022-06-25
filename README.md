@@ -33,7 +33,7 @@
 - Supports any Gradle project
   - Uses the Gradle `dependencies` task
 - Highly flexible configuration
-- Submits all maven dependencies via the Dependency submission API
+- Submits all maven dependencies via the Dependency Submission API
 
 This action executes the `dependencies` task of a given Gradle project, and will submit the dependency tree via the [Dependency Submission API](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api).
 
@@ -97,7 +97,7 @@ $ npm test
 ### Credits
 
 - [Go Dependency Submission Action](https://github.com/actions/go-dependency-submission/)
-- [Dependency Submission Toolkig](https://github.com/github/dependency-submission-toolkit)
+- [Dependency Submission Toolkit](https://github.com/github/dependency-submission-toolkit)
 
 ## Other actions
 
