@@ -46,14 +46,13 @@ name: build
 on:
   pull_request:
 
-# The API requires write permission on the repository to submit dependencies
-permissions:
-  contents: write
-  
 jobs:
   build:
     name: Dependencies
     runs-on: ubuntu-latest
+    # The Dependency Submission API requires write permission
+    permissions:
+      contents: write
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v3
