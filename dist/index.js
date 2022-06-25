@@ -219,7 +219,7 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
         }
         else if (strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
             strippedLine.startsWith(DEPENDENCY_CHILD_INSET[1])) {
-            core.error(`Found a child dependency at an unsupported level, skipping. '${strippedLine}'`);
+            core.info(`Found a child dependency at an unsupported level, skipping. '${strippedLine}'`);
             iterator.next(); // consume the next item
             continue;
         }
