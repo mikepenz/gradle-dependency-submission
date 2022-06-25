@@ -1,6 +1,9 @@
-name: 'gradle-dependency-submission'
+name: 'Gradle Dependency Submission'
 description: 'Calculates dependencies for a Gradle build-target and submits the list to the Dependency Submission API'
 author: 'Mike Penz'
+branding:
+  icon: 'check-circle'  
+  color: 'blue'
 inputs:
   token:
     description: "GitHub Personal Access Token (PAT). Defaults to PAT provided by Action runner"

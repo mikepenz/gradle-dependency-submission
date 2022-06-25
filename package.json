@@ -2,7 +2,7 @@
   "name": "gradle-dependency-submission",
   "version": "0.0.1",
   "private": true,
-  "description": "Gradle Dependency submission",
+  "description": "Gradle Dependency Submission",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
