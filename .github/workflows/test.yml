@@ -50,6 +50,6 @@ jobs:
       - uses: ./
         with:
           gradle-project-path: "gradle-example"
-          gradle-dependency-path: "build.gradle"
+          gradle-dependency-path: "app/build.gradle"
           gradle-build-module: ":app"
           gradle-build-configuration: "debugCompileClasspath"
