@@ -6,9 +6,6 @@ inputs:
     description: "GitHub Personal Access Token (PAT). Defaults to PAT provided by Action runner"
     required: false
     default: ${{ github.token }}
-  metadata:
-    required: false
-    description: 'User provided map of max key/value pairs of metadata to include with the snapshot e.g. {"lastModified": "12-31-2022"}'
   gradle-project-path:
     required: true
     description: 'Path to the root of the project to extract dependencies for'
