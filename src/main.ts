@@ -1,19 +1,40 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import * as github from '@actions/github'
+import {
+  Snapshot,
+  Manifest,
+  submitSnapshot
+} from '@github/dependency-submission-toolkit'
+import { processGradleGraph } from './process'
 
 async function run(): Promise<void> {
-  try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+  //https://github.com/actions/go-dependency-submission/blob/main/src/index.ts
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+  //https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api
+  //https://docs.github.com/en/rest/dependency-graph/dependency-submission#about-the-dependency-submission-api
+  //https://github.com/github/dependency-submission-toolkit
 
-    core.setOutput('time', new Date().toTimeString())
-  } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
-  }
+  const gradleProjectPath = core.getInput('gradle-project-path')
+  const gradleBuildModule = core.getInput('gradle-build-module')
+  const gradleBuildConfiguration = core.getInput('gradle-build-configuration')
+  const gradleDependencyPath = core.getInput('gradle-dependency-path')
+
+  const directDeps = await processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration)
+  const manifest = new Manifest(gradleBuildConfiguration, gradleDependencyPath)
+  const snapshot = new Snapshot(
+    {
+      name: 'mikepenz/gradle-dependency-submission',
+      url: 'https://github.com/actions/go-dependency-submission',
+      version: '0.0.1'
+    },
+    github.context,
+    {
+      correlator: `${github.context.job}-${gradleBuildConfiguration}`,
+      id: github.context.runId.toString()
+    }
+  )
+  snapshot.addManifest(manifest)
+  submitSnapshot(snapshot)
 }
 
 run()

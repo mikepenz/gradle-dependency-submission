@@ -1,11 +1,30 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'gradle-dependency-submission'
+description: 'Calculates dependencies for a Gradle build-target and submits the list to the Dependency Submission API'
+author: 'Mike Penz'
 inputs:
-  milliseconds: # change this
+  token:
+    description: "GitHub Personal Access Token (PAT). Defaults to PAT provided by Action runner"
+    required: false
+    default: ${{ github.token }}
+  metadata:
+    required: false
+    description: 'User provided map of max key/value pairs of metadata to include with the snapshot e.g. {"lastModified": "12-31-2022"}'
+  gradle-project-path:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'Path to the root of the project to extract dependencies for'
+    default: ''
+  gradle-dependency-path:
+    required: true
+    description: 'Path to the file containing the dependency specification. Defaults to the root `build.gradle`'
+    default: 'build.gradle'
+  gradle-build-module:
+    required: true
+    description: 'The module for which to resolve dependencies. E.g. `:app`'
+    default: ''
+  gradle-build-configuration:
+    required: true
+    description: 'The configuration used to retrieve all dependencies from.'
+    default: 'debugCompileClasspath'
 runs:
   using: 'node16'
   main: 'dist/index.js'
