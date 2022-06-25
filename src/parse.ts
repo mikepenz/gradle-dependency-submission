@@ -1,7 +1,9 @@
 import {PackageURL} from 'packageurl-js'
+import * as core from '@actions/core'
 
 const DEPENDENCY_DEPENDENCY_LEVEL_START = '+--- '
 const DEPENDENCY_DEPENDENCY_LEVEL_END = '\\--- '
+const DEPENDENCY_PROJECT_START = `${DEPENDENCY_DEPENDENCY_LEVEL_START}project`
 const DEPENDENCY_CHILD_INSET = ['|    ', '     ']
 const DEPENDENCY_CONSTRAINT = ' (c)'
 const DEPENDENCY_OMITTED = ' (*)'
@@ -11,9 +13,15 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
   const stripped = pkg
     .substring((level + 1) * DEPENDENCY_LEVEL_INLINE)
     .trimEnd()
-  const [packageName, libraryName, lineEnd] = stripped.split(':')
+  const split = stripped.split(':')
+  if (split.length < 3) {
+    core.error(`Could not parse package: '${pkg}'`)
+    throw Error(`The given '${pkg} can't be parsed as a gradle package.`)
+  }
+  const [packageName, libraryName, lineEnd] = split
 
   let strippedLineEnd = lineEnd
+
   if (
     lineEnd.endsWith(DEPENDENCY_CONSTRAINT) ||
     lineEnd.endsWith(DEPENDENCY_OMITTED)
@@ -90,7 +98,13 @@ export function parseGradleDependency(
     }
     const strippedLine = line.substring(level * DEPENDENCY_LEVEL_INLINE)
 
-    if (
+    if (line.startsWith(DEPENDENCY_PROJECT_START)) {
+      core.warning(
+        'Found a project dependency, skipping (Currently not supported)'
+      )
+      iterator.next() // consume the next item
+      continue
+    } else if (
       strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
       strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END)
     ) {
@@ -111,7 +125,11 @@ export function parseGradleDependency(
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[1])
     ) {
-      throw Error('Should not reach here!')
+      core.error(
+        `Found a child dependency at an unsupported level, skipping. '${strippedLine}'`
+      )
+      iterator.next() // consume the next item
+      continue
     } else if (level === 0) {
       iterator.next() // consume the next item
       continue

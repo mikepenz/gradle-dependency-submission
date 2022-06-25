@@ -88,15 +88,40 @@ run();
 /***/ }),
 
 /***/ 5223:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseGradleDependency = exports.parseGradleGraph = exports.parseGradlePackage = void 0;
 const packageurl_js_1 = __nccwpck_require__(8915);
+const core = __importStar(__nccwpck_require__(2186));
 const DEPENDENCY_DEPENDENCY_LEVEL_START = '+--- ';
 const DEPENDENCY_DEPENDENCY_LEVEL_END = '\\--- ';
+const DEPENDENCY_PROJECT_START = `${DEPENDENCY_DEPENDENCY_LEVEL_START}project`;
 const DEPENDENCY_CHILD_INSET = ['|    ', '     '];
 const DEPENDENCY_CONSTRAINT = ' (c)';
 const DEPENDENCY_OMITTED = ' (*)';
@@ -105,7 +130,12 @@ function parseGradlePackage(pkg, level = 0) {
     const stripped = pkg
         .substring((level + 1) * DEPENDENCY_LEVEL_INLINE)
         .trimEnd();
-    const [packageName, libraryName, lineEnd] = stripped.split(':');
+    const split = stripped.split(':');
+    if (split.length < 3) {
+        core.error(`Could not parse package: '${pkg}'`);
+        throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+    }
+    const [packageName, libraryName, lineEnd] = split;
     let strippedLineEnd = lineEnd;
     if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) ||
         lineEnd.endsWith(DEPENDENCY_OMITTED)) {
@@ -165,7 +195,12 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
             continue;
         }
         const strippedLine = line.substring(level * DEPENDENCY_LEVEL_INLINE);
-        if (strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
+        if (line.startsWith(DEPENDENCY_PROJECT_START)) {
+            core.warning('Found a project dependency, skipping (Currently not supported)');
+            iterator.next(); // consume the next item
+            continue;
+        }
+        else if (strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
             strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END)) {
             iterator.next(); // consume the next item
             if (level === 0 && strippedLine.endsWith(DEPENDENCY_CONSTRAINT)) {
@@ -182,7 +217,9 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
         }
         else if (strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
             strippedLine.startsWith(DEPENDENCY_CHILD_INSET[1])) {
-            throw Error('Should not reach here!');
+            core.error(`Found a child dependency at an unsupported level, skipping. '${strippedLine}'`);
+            iterator.next(); // consume the next item
+            continue;
         }
         else if (level === 0) {
             iterator.next(); // consume the next item
