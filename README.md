@@ -46,6 +46,10 @@ name: build
 on:
   pull_request:
 
+# The API requires write permission on the repository to submit dependencies
+permissions:
+  contents: write
+  
 jobs:
   build:
     name: Dependencies
