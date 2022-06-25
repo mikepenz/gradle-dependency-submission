@@ -46,19 +46,17 @@ const process_1 = __nccwpck_require__(1647);
 const path = __importStar(__nccwpck_require__(1017));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        //https://github.com/actions/go-dependency-submission/blob/main/src/index.ts
-        //https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api
-        //https://docs.github.com/en/rest/dependency-graph/dependency-submission#about-the-dependency-submission-api
-        //https://github.com/github/dependency-submission-toolkit
         const gradleProjectPath = core.getInput('gradle-project-path');
         const gradleBuildModule = core.getInput('gradle-build-module');
         const gradleBuildConfiguration = core.getInput('gradle-build-configuration');
         const gradleDependencyPath = core.getInput('gradle-dependency-path');
         const { packageCache, directDependencies, indirectDependencies } = yield (0, process_1.processGradleGraph)(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        core.startGroup(`📦️ Preparing Dependency Snapshot`);
         const manifest = new dependency_submission_toolkit_1.Manifest(gradleBuildConfiguration, path.join(gradleProjectPath, gradleDependencyPath));
         for (const pkgUrl of directDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);
             if (!dep) {
+                core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`);
                 throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache');
             }
             manifest.addDirectDependency(dep);
@@ -66,6 +64,7 @@ function run() {
         for (const pkgUrl of indirectDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);
             if (!dep) {
+                core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`);
                 throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache');
             }
             manifest.addIndirectDependency(dep);
@@ -80,6 +79,7 @@ function run() {
         });
         snapshot.addManifest(manifest);
         (0, dependency_submission_toolkit_1.submitSnapshot)(snapshot);
+        core.endGroup();
     });
 }
 run();
@@ -88,15 +88,40 @@ run();
 /***/ }),
 
 /***/ 5223:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseGradleDependency = exports.parseGradleGraph = exports.parseGradlePackage = void 0;
 const packageurl_js_1 = __nccwpck_require__(8915);
+const core = __importStar(__nccwpck_require__(2186));
 const DEPENDENCY_DEPENDENCY_LEVEL_START = '+--- ';
 const DEPENDENCY_DEPENDENCY_LEVEL_END = '\\--- ';
+const DEPENDENCY_PROJECT_START = `${DEPENDENCY_DEPENDENCY_LEVEL_START}project`;
 const DEPENDENCY_CHILD_INSET = ['|    ', '     '];
 const DEPENDENCY_CONSTRAINT = ' (c)';
 const DEPENDENCY_OMITTED = ' (*)';
@@ -105,7 +130,12 @@ function parseGradlePackage(pkg, level = 0) {
     const stripped = pkg
         .substring((level + 1) * DEPENDENCY_LEVEL_INLINE)
         .trimEnd();
-    const [packageName, libraryName, lineEnd] = stripped.split(':');
+    const split = stripped.split(':');
+    if (split.length < 3) {
+        core.error(`Could not parse package: '${pkg}'`);
+        throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+    }
+    const [packageName, libraryName, lineEnd] = split;
     let strippedLineEnd = lineEnd;
     if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) ||
         lineEnd.endsWith(DEPENDENCY_OMITTED)) {
@@ -129,6 +159,7 @@ exports.parseGradlePackage = parseGradlePackage;
  */
 function parseGradleGraph(contents) {
     var _a;
+    core.startGroup(`📄 Parsing gradle dependencies graph`);
     const pkgAssocList = [];
     const linesIterator = new PeekingIterator(contents.split('\n').values());
     // iterate until the dependencies start!
@@ -142,6 +173,7 @@ function parseGradleGraph(contents) {
     }
     // parse dependency tree
     parseGradleDependency(pkgAssocList, linesIterator, undefined, 0);
+    core.endGroup();
     return pkgAssocList;
 }
 exports.parseGradleGraph = parseGradleGraph;
@@ -165,7 +197,12 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
             continue;
         }
         const strippedLine = line.substring(level * DEPENDENCY_LEVEL_INLINE);
-        if (strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
+        if (line.startsWith(DEPENDENCY_PROJECT_START)) {
+            core.warning('Found a project dependency, skipping (Currently not supported)');
+            iterator.next(); // consume the next item
+            continue;
+        }
+        else if (strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
             strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END)) {
             iterator.next(); // consume the next item
             if (level === 0 && strippedLine.endsWith(DEPENDENCY_CONSTRAINT)) {
@@ -182,7 +219,9 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
         }
         else if (strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
             strippedLine.startsWith(DEPENDENCY_CHILD_INSET[1])) {
-            throw Error('Should not reach here!');
+            core.error(`Found a child dependency at an unsupported level, skipping. '${strippedLine}'`);
+            iterator.next(); // consume the next item
+            continue;
         }
         else if (level === 0) {
             iterator.next(); // consume the next item
@@ -300,6 +339,7 @@ function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildCon
 exports.processGradleGraph = processGradleGraph;
 function processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.startGroup(`🔨 Processing gradle dependencies`);
         const dependencyList = yield exec.getExecOutput('./gradlew', [
             `${gradleBuildModule}:dependencies`,
             '--configuration',
@@ -310,6 +350,7 @@ function processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuild
             core.setFailed(`'gradle ${gradleBuildModule}:dependencies resolution' failed!`);
             throw new Error("Failed to execute 'gradle dependencies'");
         }
+        core.endGroup();
         return (0, parse_1.parseGradleGraph)(dependencyList.stdout);
     });
 }

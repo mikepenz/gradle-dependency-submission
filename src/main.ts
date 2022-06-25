@@ -9,11 +9,6 @@ import {processGradleGraph} from './process'
 import * as path from 'path'
 
 async function run(): Promise<void> {
-  //https://github.com/actions/go-dependency-submission/blob/main/src/index.ts
-  //https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api
-  //https://docs.github.com/en/rest/dependency-graph/dependency-submission#about-the-dependency-submission-api
-  //https://github.com/github/dependency-submission-toolkit
-
   const gradleProjectPath = core.getInput('gradle-project-path')
   const gradleBuildModule = core.getInput('gradle-build-module')
   const gradleBuildConfiguration = core.getInput('gradle-build-configuration')
@@ -25,6 +20,9 @@ async function run(): Promise<void> {
       gradleBuildModule,
       gradleBuildConfiguration
     )
+
+
+  core.startGroup(`📦️ Preparing Dependency Snapshot`)
   const manifest = new Manifest(
     gradleBuildConfiguration,
     path.join(gradleProjectPath, gradleDependencyPath)
@@ -33,6 +31,7 @@ async function run(): Promise<void> {
   for (const pkgUrl of directDependencies) {
     const dep = packageCache.lookupPackage(pkgUrl)
     if (!dep) {
+      core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`)
       throw new Error(
         'assertion failed: expected all direct dependencies to have entries in PackageCache'
       )
@@ -43,6 +42,7 @@ async function run(): Promise<void> {
   for (const pkgUrl of indirectDependencies) {
     const dep = packageCache.lookupPackage(pkgUrl)
     if (!dep) {
+      core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`)
       throw new Error(
         'assertion failed: expected all indirect dependencies to have entries in PackageCache'
       )
@@ -64,6 +64,7 @@ async function run(): Promise<void> {
   )
   snapshot.addManifest(manifest)
   submitSnapshot(snapshot)
+  core.endGroup()
 }
 
 run()
