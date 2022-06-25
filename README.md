@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run snapshot action
-        uses: mikepenz/gradle-dependency-submission@main
+        uses: mikepenz/gradle-dependency-submission@{latest}
         with:
           gradle-project-path: "gradle-example"
           gradle-dependency-path: "app/build.gradle"
