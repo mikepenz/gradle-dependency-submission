@@ -46,19 +46,17 @@ const process_1 = __nccwpck_require__(1647);
 const path = __importStar(__nccwpck_require__(1017));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        //https://github.com/actions/go-dependency-submission/blob/main/src/index.ts
-        //https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api
-        //https://docs.github.com/en/rest/dependency-graph/dependency-submission#about-the-dependency-submission-api
-        //https://github.com/github/dependency-submission-toolkit
         const gradleProjectPath = core.getInput('gradle-project-path');
         const gradleBuildModule = core.getInput('gradle-build-module');
         const gradleBuildConfiguration = core.getInput('gradle-build-configuration');
         const gradleDependencyPath = core.getInput('gradle-dependency-path');
         const { packageCache, directDependencies, indirectDependencies } = yield (0, process_1.processGradleGraph)(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        core.startGroup(`📦️ Preparing Dependency Snapshot`);
         const manifest = new dependency_submission_toolkit_1.Manifest(gradleBuildConfiguration, path.join(gradleProjectPath, gradleDependencyPath));
         for (const pkgUrl of directDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);
             if (!dep) {
+                core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`);
                 throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache');
             }
             manifest.addDirectDependency(dep);
@@ -66,6 +64,7 @@ function run() {
         for (const pkgUrl of indirectDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);
             if (!dep) {
+                core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`);
                 throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache');
             }
             manifest.addIndirectDependency(dep);
@@ -80,6 +79,7 @@ function run() {
         });
         snapshot.addManifest(manifest);
         (0, dependency_submission_toolkit_1.submitSnapshot)(snapshot);
+        core.endGroup();
     });
 }
 run();
@@ -159,6 +159,7 @@ exports.parseGradlePackage = parseGradlePackage;
  */
 function parseGradleGraph(contents) {
     var _a;
+    core.startGroup(`📄 Parsing gradle dependencies graph`);
     const pkgAssocList = [];
     const linesIterator = new PeekingIterator(contents.split('\n').values());
     // iterate until the dependencies start!
@@ -172,6 +173,7 @@ function parseGradleGraph(contents) {
     }
     // parse dependency tree
     parseGradleDependency(pkgAssocList, linesIterator, undefined, 0);
+    core.endGroup();
     return pkgAssocList;
 }
 exports.parseGradleGraph = parseGradleGraph;
@@ -337,6 +339,7 @@ function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildCon
 exports.processGradleGraph = processGradleGraph;
 function processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.startGroup(`🔨 Processing gradle dependencies`);
         const dependencyList = yield exec.getExecOutput('./gradlew', [
             `${gradleBuildModule}:dependencies`,
             '--configuration',
@@ -347,6 +350,7 @@ function processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuild
             core.setFailed(`'gradle ${gradleBuildModule}:dependencies resolution' failed!`);
             throw new Error("Failed to execute 'gradle dependencies'");
         }
+        core.endGroup();
         return (0, parse_1.parseGradleGraph)(dependencyList.stdout);
     });
 }
