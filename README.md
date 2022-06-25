@@ -1,105 +1,127 @@
+<div align="center">
+  :octocat:
+</div>
+<h1 align="center">
+  gradle-dependency-submission
+</h1>
+
 <p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
+    ... calculates dependencies for a Gradle build-target and submits the list to the Dependency Submission API.
 </p>
 
-# Create a JavaScript Action using TypeScript
+<div align="center">
+  <img src=".github/images/action.png"/>
+</div>
 
-Use this template to bootstrap the creation of a TypeScript action.:rocket:
+<div align="center">
+  <a href="https://github.com/mikepenz/gradle-dependency-submission">
+		<img src="https://github.com/mikepenz/gradle-dependency-submission/workflows/test/badge.svg"/>
+	</a>
+</div>
+<br />
 
-This template includes compilation support, tests, a validation workflow, publishing, and versioning guidance.  
+-------
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+<p align="center">
+    <a href="#whats-included-">What's included 🚀</a> &bull;
+    <a href="#setup">Setup 🛠️</a> &bull;
+    <a href="#sample-%EF%B8%8F">Sample 🖥️</a> &bull;
+    <a href="#contribute-">Contribute 🧬</a> &bull;
+    <a href="#license">License 📓</a>
+</p>
 
-## Create an action from this template
+-------
 
-Click the `Use this Template` and provide the new repo details for your action
+### What's included 🚀
 
-## Code in Main
+- Supports any Gradle project
+  - Uses the Gradle `dependencies` task
+- Highly flexible configuration
+- Submits all maven dependencies via the Dependency submission API
 
-> First, you'll need to have a reasonably modern version of `node` handy. This won't work with versions older than 9, for instance.
+This action executes the `dependencies` task of a given Gradle project, and will submit the dependency tree via the [Dependency Submission API](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api).
 
-Install the dependencies  
+## Setup
+
+### Configure the workflow
+
+```yml
+name: build
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v3
+
+      - name: Run snapshot action
+        uses: mikepenz/gradle-dependency-submission@main
+        with:
+          gradle-project-path: "gradle-example"
+          gradle-dependency-path: "app/build.gradle"
+          gradle-build-module: ":app"
+          gradle-build-configuration: "debugCompileClasspath"
+```
+
+### Inputs
+
+| **Input**      | **Description**                                                                                                                                                       |
+|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `gradle-project-path`    | Defines the path to the gradle project. Defaults to '' |
+| `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. Defaults to 'build.gradle' |
+| `gradle-build-module`    | Defines the module to retrieve the dependencies for. This is often `:app`. Defaults to ''.  |
+| `gradle-build-configuration`    | The configuration for which dependencies are resolved. Defaults to `debugCompileClasspath`.  |
+
+## Sample 🖥️
+
+[Snapshot dependencies](https://github.com/mikepenz/gradle-dependency-submission/network/dependencies)
+
+## Contribute 🧬
+
 ```bash
+# Install the dependencies  
 $ npm install
-```
 
-Build the typescript and package it for distribution
-```bash
+# Verify lint is happy
+$ npm run lint -- --fix
+
+# Build the typescript and package it for distribution
 $ npm run build && npm run package
-```
 
-Run the tests :heavy_check_mark:  
-```bash
+# Run the tests, use to debug, and test it out
 $ npm test
-
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
 ```
 
-## Change action.yml
+> This action depends on the `Dependency Submission Toolkit` which is hosted in the GitHub npm registry. See the following steps to configure `npm`: https://github.com/github/dependency-submission-toolkit#installation
 
-The action.yml defines the inputs and output for your action.
+### Credits
 
-Update the action.yml with your name, description, inputs and outputs for your action.
+[Go Dependency Submission Action](https://github.com/actions/go-dependency-submission/)
+[Dependency Submission Toolkig](https://github.com/github/dependency-submission-toolkit)
 
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
+## Other actions
 
-## Change the Code
+- [release-changelog-builder-action](https://github.com/mikepenz/release-changelog-builder-action)
+- [action-junit-report](https://github.com/mikepenz/action-junit-report)
+- [xray-action](https://github.com/mikepenz/xray-action/)
+- [jira-release-composition-action](https://github.com/mikepenz/jira-release-composite-action)
 
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
+## License
 
-```javascript
-import * as core from '@actions/core';
-...
+    Copyright (C) 2022 Mike Penz
 
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-run()
-```
+       http://www.apache.org/licenses/LICENSE-2.0
 
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos so we will checkin the packed dist folder. 
-
-Then run [ncc](https://github.com/zeit/ncc) and push the results:
-```bash
-$ npm run package
-$ git add dist
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing `./` in a workflow in your repo (see [test.yml](.github/workflows/test.yml))
-
-```yaml
-uses: ./
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/typescript-action/actions) for runs of this action! :rocket:
-
-## Usage:
-
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
