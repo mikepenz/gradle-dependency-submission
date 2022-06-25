@@ -1,5 +1,7 @@
-import {describe, test, expect} from '@jest/globals'
+import {jest, describe, test, expect} from '@jest/globals'
 import {processDependencyList} from '../src/process'
+
+jest.setTimeout(240000)
 
 describe('processDependencyList', () => {
   test('run in gradle-example', async () => {

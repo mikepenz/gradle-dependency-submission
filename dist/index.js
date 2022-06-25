@@ -72,7 +72,7 @@ function run() {
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
-            url: 'https://github.com/actions/go-dependency-submission',
+            url: 'https://github.com/mikepenz/gradle-dependency-submission',
             version: '0.0.1'
         }, github.context, {
             correlator: `${github.context.job}-${gradleBuildConfiguration}`,
@@ -269,7 +269,7 @@ function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildCon
             cache.package(parent);
             if (child !== undefined) {
                 cache.package(child);
-                directDependencies.push(child);
+                indirectDependencies.push(child);
             }
             else {
                 directDependencies.push(parent);

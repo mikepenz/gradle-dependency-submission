@@ -53,7 +53,7 @@ async function run(): Promise<void> {
   const snapshot = new Snapshot(
     {
       name: 'mikepenz/gradle-dependency-submission',
-      url: 'https://github.com/actions/go-dependency-submission',
+      url: 'https://github.com/mikepenz/gradle-dependency-submission',
       version: '0.0.1'
     },
     github.context,

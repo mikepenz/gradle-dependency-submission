@@ -24,7 +24,7 @@ export async function processGradleGraph(
     cache.package(parent)
     if (child !== undefined) {
       cache.package(child)
-      directDependencies.push(child)
+      indirectDependencies.push(child)
     } else {
       directDependencies.push(parent)
     }

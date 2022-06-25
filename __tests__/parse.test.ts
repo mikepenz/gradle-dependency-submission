@@ -1,4 +1,4 @@
-import {describe, test, expect} from '@jest/globals'
+import {jest, describe, test, expect} from '@jest/globals'
 import {parseGradleGraph} from '../src/parse'
 
 const GRADLE_DEPENDENCY_OUTPUT = `
@@ -132,6 +132,8 @@ const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT = [
     undefined
   ]
 ]
+
+jest.setTimeout(180000)
 
 describe('parseGradleDependencyOutput', () => {
   test('parses output of gradle dependency command into dependencies', () => {
