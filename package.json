@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "gradle-dependency-submission",
+  "version": "0.0.1",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Gradle Dependency submission",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -15,17 +15,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/mikepenz/gradle-dependency-submission.git"
   },
   "keywords": [
-    "actions",
-    "node",
-    "setup"
+    "gradle",
+    "dependency",
+    "submission"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "Mike Penz",
+  "license": "Apache 2.0",
   "dependencies": {
-    "@actions/core": "^1.9.0"
+    "@actions/core": "^1.9.0",
+    "@github/dependency-submission-toolkit": "^1.2.0",
+    "packageurl-js": "^0.0.6"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
