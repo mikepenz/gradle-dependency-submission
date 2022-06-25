@@ -4,13 +4,12 @@ on:
     branches:
       - main
 
-# The API requires write permission on the repository to submit dependencies
-permissions:
-  contents: write
-
 jobs:
   gradle-action-detection:
     runs-on: ubuntu-latest
+    # The Dependency Submission API requires write permission
+    permissions:
+      contents: write
     steps:
       - name: Checkout Gradle Build Cache
         uses: actions/cache@v3
