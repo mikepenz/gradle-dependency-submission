@@ -10,12 +10,8 @@
 </p>
 
 <div align="center">
-  <img src=".github/images/action.png"/>
-</div>
-
-<div align="center">
   <a href="https://github.com/mikepenz/gradle-dependency-submission">
-		<img src="https://github.com/mikepenz/gradle-dependency-submission/workflows/test/badge.svg"/>
+		<img src="https://github.com/mikepenz/gradle-dependency-submission/actions/workflows/test.yml/badge.svg"/>
 	</a>
 </div>
 <br />
@@ -100,8 +96,8 @@ $ npm test
 
 ### Credits
 
-[Go Dependency Submission Action](https://github.com/actions/go-dependency-submission/)
-[Dependency Submission Toolkig](https://github.com/github/dependency-submission-toolkit)
+- [Go Dependency Submission Action](https://github.com/actions/go-dependency-submission/)
+- [Dependency Submission Toolkig](https://github.com/github/dependency-submission-toolkit)
 
 ## Other actions
 

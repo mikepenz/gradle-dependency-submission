@@ -2,6 +2,10 @@ name: 'gradle-dependency-submission'
 description: 'Calculates dependencies for a Gradle build-target and submits the list to the Dependency Submission API'
 author: 'Mike Penz'
 inputs:
+  token:
+    description: "GitHub Personal Access Token (PAT). Defaults to PAT provided by Action runner"
+    required: false
+    default: ${{ github.token }}
   gradle-project-path:
     required: true
     description: 'Path to the root of the project to extract dependencies for'
