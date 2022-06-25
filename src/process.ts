@@ -54,6 +54,7 @@ export async function processDependencyList(
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<[PackageURL, PackageURL | undefined][]> {
+  core.startGroup(`🔨 Processing gradle dependencies`)
   const dependencyList = await exec.getExecOutput(
     './gradlew',
     [
@@ -71,6 +72,7 @@ export async function processDependencyList(
     throw new Error("Failed to execute 'gradle dependencies'")
   }
 
+  core.endGroup()
   return parseGradleGraph(dependencyList.stdout)
 }
 

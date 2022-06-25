@@ -53,6 +53,7 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
 export function parseGradleGraph(
   contents: string
 ): [PackageURL, PackageURL | undefined][] {
+  core.startGroup(`📄 Parsing gradle dependencies graph`)
   const pkgAssocList: [PackageURL, PackageURL | undefined][] = []
   const linesIterator = new PeekingIterator(contents.split('\n').values())
 
@@ -66,6 +67,7 @@ export function parseGradleGraph(
   }
   // parse dependency tree
   parseGradleDependency(pkgAssocList, linesIterator, undefined, 0)
+  core.endGroup()
   return pkgAssocList
 }
 
