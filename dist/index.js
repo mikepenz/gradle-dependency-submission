@@ -67,7 +67,7 @@ function run() {
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
             url: 'https://github.com/mikepenz/gradle-dependency-submission',
-            version: '0.0.3'
+            version: '0.0.4'
         }, github.context, {
             correlator: `${github.context.job}-${gradleBuildModule.join('-')}-${gradleBuildConfiguration}`,
             id: github.context.runId.toString()
