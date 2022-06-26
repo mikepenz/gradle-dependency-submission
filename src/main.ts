@@ -53,7 +53,9 @@ async function run(): Promise<void> {
     },
     github.context,
     {
-      correlator: `${github.context.job}-${gradleBuildModule.join('-')}-${gradleBuildConfiguration}`,
+      correlator: `${github.context.job}-${gradleBuildModule.join(
+        '-'
+      )}-${gradleBuildConfiguration}`,
       id: github.context.runId.toString()
     }
   )
