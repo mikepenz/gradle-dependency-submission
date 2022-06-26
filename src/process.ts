@@ -1,8 +1,53 @@
 import {PackageURL} from 'packageurl-js'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
-import {PackageCache} from '@github/dependency-submission-toolkit'
+import {Manifest, PackageCache} from '@github/dependency-submission-toolkit'
 import {parseGradleGraph} from './parse'
+import * as path from 'path'
+
+export async function prepareDependencyManifest(
+  gradleProjectPath: string,
+  gradleBuildModule: string,
+  gradleBuildConfiguration: string,
+  gradleDependencyPath: string
+): Promise<Manifest> {
+  const {packageCache, directDependencies, indirectDependencies} =
+    await processGradleGraph(
+      gradleProjectPath,
+      gradleBuildModule,
+      gradleBuildConfiguration
+    )
+
+  core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`)
+  const manifest = new Manifest(
+    path.dirname(gradleDependencyPath),
+    path.join(gradleProjectPath, gradleDependencyPath)
+  )
+
+  for (const pkgUrl of directDependencies) {
+    const dep = packageCache.lookupPackage(pkgUrl)
+    if (!dep) {
+      core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`)
+      throw new Error(
+        'assertion failed: expected all direct dependencies to have entries in PackageCache'
+      )
+    }
+    manifest.addDirectDependency(dep)
+  }
+
+  for (const pkgUrl of indirectDependencies) {
+    const dep = packageCache.lookupPackage(pkgUrl)
+    if (!dep) {
+      core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`)
+      throw new Error(
+        'assertion failed: expected all indirect dependencies to have entries in PackageCache'
+      )
+    }
+    manifest.addIndirectDependency(dep)
+  }
+  core.endGroup()
+  return manifest
+}
 
 export async function processGradleGraph(
   gradleProjectPath: string,
@@ -54,7 +99,7 @@ export async function processDependencyList(
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<[PackageURL, PackageURL | undefined][]> {
-  core.startGroup(`🔨 Processing gradle dependencies`)
+  core.startGroup(`🔨 Processing gradle dependencies - '${gradleBuildModule}'`)
   const dependencyList = await exec.getExecOutput(
     './gradlew',
     [
@@ -73,7 +118,7 @@ export async function processDependencyList(
   }
 
   core.endGroup()
-  return parseGradleGraph(dependencyList.stdout)
+  return parseGradleGraph(gradleBuildModule, dependencyList.stdout)
 }
 
 interface Result {

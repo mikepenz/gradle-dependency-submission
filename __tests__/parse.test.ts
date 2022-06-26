@@ -137,7 +137,7 @@ jest.setTimeout(180000)
 
 describe('parseGradleDependencyOutput', () => {
   test('parses output of gradle dependency command into dependencies', () => {
-    const dependencies = parseGradleGraph(GRADLE_DEPENDENCY_OUTPUT)
+    const dependencies = parseGradleGraph("test", GRADLE_DEPENDENCY_OUTPUT)
 
     expect(Object.values(dependencies).length).toEqual(
       GRADLE_EXAMPLE_DEPENDENCY_OUTPUT.length
