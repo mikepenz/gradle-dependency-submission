@@ -44,14 +44,15 @@ This action executes the `dependencies` task of a given Gradle project, and will
 ```yml
 name: build
 on:
-  pull_request:
+  push:
+    branches:
+      - develop # run the action on your projects default branch
 
 jobs:
   build:
     name: Dependencies
     runs-on: ubuntu-latest
-    # The Dependency Submission API requires write permission
-    permissions:
+    permissions: # The Dependency Submission API requires write permission
       contents: write
     steps:
       - name: 'Checkout Repository'
@@ -65,6 +66,8 @@ jobs:
           gradle-build-module: ":app"
           gradle-build-configuration: "debugCompileClasspath"
 ```
+
+> ℹ️ Currently the action has to be run on the default branch. Running it as part of a PR won't update the [Dependency graph](https://github.com/mikepenz/gradle-dependency-submission/network/dependencies) of your projects [Insights](https://github.com/mikepenz/gradle-dependency-submission/pulse)
 
 ### Inputs
 
