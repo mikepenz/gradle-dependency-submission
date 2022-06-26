@@ -21,7 +21,6 @@ async function run(): Promise<void> {
       gradleBuildConfiguration
     )
 
-
   core.startGroup(`📦️ Preparing Dependency Snapshot`)
   const manifest = new Manifest(
     gradleBuildConfiguration,
@@ -54,11 +53,14 @@ async function run(): Promise<void> {
     {
       name: 'mikepenz/gradle-dependency-submission',
       url: 'https://github.com/mikepenz/gradle-dependency-submission',
-      version: '0.0.1'
+      version: '0.0.3'
     },
     github.context,
     {
-      correlator: `${github.context.job}-${gradleBuildConfiguration}`,
+      correlator: `${github.context.job}-${gradleBuildModule.replace(
+        ':',
+        ''
+      )}-${gradleBuildConfiguration}`,
       id: github.context.runId.toString()
     }
   )
