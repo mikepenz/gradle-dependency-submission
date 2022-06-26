@@ -12,5 +12,8 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Gradleexample"
+
+rootProject.name = "Gradle Example"
+
 include ':app'
+include ':simple-app'

@@ -25,10 +25,18 @@ jobs:
       - name: 'Checkout Repository'
         uses: actions/checkout@v3
 
-      - name: Run snapshot action
+      - name: Run snapshot action - app
         uses: mikepenz/gradle-dependency-submission@main
         with:
           gradle-project-path: "gradle-example"
           gradle-dependency-path: "app/build.gradle"
           gradle-build-module: ":app"
+          gradle-build-configuration: "debugCompileClasspath"
+      
+      - name: Run snapshot action - simple-app
+        uses: mikepenz/gradle-dependency-submission@main
+        with:
+          gradle-project-path: "gradle-example"
+          gradle-dependency-path: "simple-app/build.gradle"
+          gradle-build-module: ":simple-app"
           gradle-build-configuration: "debugCompileClasspath"
