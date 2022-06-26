@@ -5,48 +5,44 @@ import {
   Manifest,
   submitSnapshot
 } from '@github/dependency-submission-toolkit'
-import {processGradleGraph} from './process'
-import * as path from 'path'
+import {prepareDependencyManifest} from './process'
 
 async function run(): Promise<void> {
-  const gradleProjectPath = core.getInput('gradle-project-path')
-  const gradleBuildModule = core.getInput('gradle-build-module')
-  const gradleBuildConfiguration = core.getInput('gradle-build-configuration')
-  const gradleDependencyPath = core.getInput('gradle-dependency-path')
+  core.startGroup(`📘 Reading input values`)
+  const gradleProjectPath = core.getInput('gradle-project-path').split(';')
+  const gradleBuildModule = core.getInput('gradle-build-module').split(';')
+  const gradleBuildConfiguration = core
+    .getInput('gradle-build-configuration')
+    .split(';')
+  const gradleDependencyPath = core
+    .getInput('gradle-dependency-path')
+    .split(';')
 
-  const {packageCache, directDependencies, indirectDependencies} =
-    await processGradleGraph(
-      gradleProjectPath,
-      gradleBuildModule,
-      gradleBuildConfiguration
+  const length = gradleProjectPath.length
+  if (
+    [gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath].some(
+      x => x.length !== length
     )
-
-  core.startGroup(`📦️ Preparing Dependency Snapshot`)
-  const manifest = new Manifest(
-    gradleBuildConfiguration,
-    path.join(gradleProjectPath, gradleDependencyPath)
-  )
-
-  for (const pkgUrl of directDependencies) {
-    const dep = packageCache.lookupPackage(pkgUrl)
-    if (!dep) {
-      core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`)
-      throw new Error(
-        'assertion failed: expected all direct dependencies to have entries in PackageCache'
-      )
-    }
-    manifest.addDirectDependency(dep)
+  ) {
+    core.setFailed(
+      'When passing multiple projects, all inputs must have the same amount of items'
+    )
+    return
   }
 
-  for (const pkgUrl of indirectDependencies) {
-    const dep = packageCache.lookupPackage(pkgUrl)
-    if (!dep) {
-      core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`)
-      throw new Error(
-        'assertion failed: expected all indirect dependencies to have entries in PackageCache'
+  core.endGroup()
+
+  const manifests: Manifest[] = []
+
+  for (let i = 0; i < length; i++) {
+    manifests.push(
+      await prepareDependencyManifest(
+        gradleProjectPath[i],
+        gradleBuildModule[i],
+        gradleBuildConfiguration[i],
+        gradleDependencyPath[i]
       )
-    }
-    manifest.addIndirectDependency(dep)
+    )
   }
 
   const snapshot = new Snapshot(
@@ -57,14 +53,13 @@ async function run(): Promise<void> {
     },
     github.context,
     {
-      correlator: `${github.context.job}-${gradleBuildModule.replace(
-        ':',
-        ''
-      )}-${gradleBuildConfiguration}`,
+      correlator: `${github.context.job}-${gradleBuildModule.join('-')}-${gradleBuildConfiguration}`,
       id: github.context.runId.toString()
     }
   )
-  snapshot.addManifest(manifest)
+  for (const manifest of manifests) {
+    snapshot.addManifest(manifest)
+  }
   submitSnapshot(snapshot)
   core.endGroup()
 }

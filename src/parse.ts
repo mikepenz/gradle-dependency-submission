@@ -51,9 +51,12 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
  * graph' as input
  */
 export function parseGradleGraph(
+  gradleBuildModule: string,
   contents: string
 ): [PackageURL, PackageURL | undefined][] {
-  core.startGroup(`📄 Parsing gradle dependencies graph`)
+  core.startGroup(
+    `📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`
+  )
   const pkgAssocList: [PackageURL, PackageURL | undefined][] = []
   const linesIterator = new PeekingIterator(contents.split('\n').values())
 
