@@ -27,7 +27,7 @@
   "dependencies": {
     "@actions/core": "^1.9.0",
     "@github/dependency-submission-toolkit": "^1.2.0",
-    "packageurl-js": "^0.0.6"
+    "packageurl-js": "^0.0.7"
   },
   "devDependencies": {
     "@types/node": "^18.0.6",
