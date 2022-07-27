@@ -73,6 +73,7 @@ jobs:
 
 | **Input**      | **Description**                                                                                                                                                       |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `use-gradlew`    | Defines if `./gradlew` or `gradle` cli will be used to retrieve the dependencies. |
 | `gradle-project-path`    | Defines the path to the gradle project. Defaults to '' |
 | `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. Defaults to 'build.gradle' |
 | `gradle-build-module`    | Defines the module to retrieve the dependencies for. This is often `:app`. Defaults to ''.  |
