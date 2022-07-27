@@ -6,6 +6,7 @@ jest.setTimeout(240000)
 describe('processDependencyList', () => {
   test('run in gradle-example', async () => {
     const dependencies = await processDependencyList(
+      true,
       'gradle-example',
       ':app',
       'debugCompileClasspath'

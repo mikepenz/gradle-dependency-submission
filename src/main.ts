@@ -9,6 +9,7 @@ import {prepareDependencyManifest} from './process'
 
 async function run(): Promise<void> {
   core.startGroup(`📘 Reading input values`)
+  const useGradlew = core.getBooleanInput('use-gradlew')
   const gradleProjectPath = core.getInput('gradle-project-path').split(';')
   const gradleBuildModule = core.getInput('gradle-build-module').split(';')
   const gradleBuildConfiguration = core
@@ -37,6 +38,7 @@ async function run(): Promise<void> {
   for (let i = 0; i < length; i++) {
     manifests.push(
       await prepareDependencyManifest(
+        useGradlew,
         gradleProjectPath[i],
         gradleBuildModule[i],
         gradleBuildConfiguration[i],

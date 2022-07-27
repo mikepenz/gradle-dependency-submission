@@ -46,6 +46,7 @@ const process_1 = __nccwpck_require__(1647);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`📘 Reading input values`);
+        const useGradlew = core.getBooleanInput('use-gradlew');
         const gradleProjectPath = core.getInput('gradle-project-path').split(';');
         const gradleBuildModule = core.getInput('gradle-build-module').split(';');
         const gradleBuildConfiguration = core
@@ -62,7 +63,7 @@ function run() {
         core.endGroup();
         const manifests = [];
         for (let i = 0; i < length; i++) {
-            manifests.push(yield (0, process_1.prepareDependencyManifest)(gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration[i], gradleDependencyPath[i]));
+            manifests.push(yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration[i], gradleDependencyPath[i]));
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
@@ -295,9 +296,9 @@ const exec = __importStar(__nccwpck_require__(1514));
 const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const parse_1 = __nccwpck_require__(5223);
 const path = __importStar(__nccwpck_require__(1017));
-function prepareDependencyManifest(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath) {
+function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { packageCache, directDependencies, indirectDependencies } = yield processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        const { packageCache, directDependencies, indirectDependencies } = yield processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`);
         const manifest = new dependency_submission_toolkit_1.Manifest(path.dirname(gradleDependencyPath), path.join(gradleProjectPath, gradleDependencyPath));
         for (const pkgUrl of directDependencies) {
@@ -321,9 +322,9 @@ function prepareDependencyManifest(gradleProjectPath, gradleBuildModule, gradleB
     });
 }
 exports.prepareDependencyManifest = prepareDependencyManifest;
-function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
+function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
-        const dependencyList = yield processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        const dependencyList = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         /* add all direct and indirect packages to a new PackageCache */
         const cache = new dependency_submission_toolkit_1.PackageCache();
         const directDependencies = [];
@@ -361,10 +362,11 @@ function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildCon
     });
 }
 exports.processGradleGraph = processGradleGraph;
-function processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
+function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`🔨 Processing gradle dependencies - '${gradleBuildModule}'`);
-        const dependencyList = yield exec.getExecOutput('./gradlew', [
+        const command = useGradlew ? './gradlew' : 'gradle';
+        const dependencyList = yield exec.getExecOutput(command, [
             `${gradleBuildModule}:dependencies`,
             '--configuration',
             gradleBuildConfiguration

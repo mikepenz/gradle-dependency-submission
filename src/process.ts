@@ -6,6 +6,7 @@ import {parseGradleGraph} from './parse'
 import * as path from 'path'
 
 export async function prepareDependencyManifest(
+  useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
   gradleBuildConfiguration: string,
@@ -13,6 +14,7 @@ export async function prepareDependencyManifest(
 ): Promise<Manifest> {
   const {packageCache, directDependencies, indirectDependencies} =
     await processGradleGraph(
+      useGradlew,
       gradleProjectPath,
       gradleBuildModule,
       gradleBuildConfiguration
@@ -50,11 +52,13 @@ export async function prepareDependencyManifest(
 }
 
 export async function processGradleGraph(
+  useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<Result> {
   const dependencyList = await processDependencyList(
+    useGradlew,
     gradleProjectPath,
     gradleBuildModule,
     gradleBuildConfiguration
@@ -95,13 +99,16 @@ export async function processGradleGraph(
 }
 
 export async function processDependencyList(
+  useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<[PackageURL, PackageURL | undefined][]> {
   core.startGroup(`🔨 Processing gradle dependencies - '${gradleBuildModule}'`)
+
+  const command = useGradlew ? './gradlew' : 'gradle'
   const dependencyList = await exec.getExecOutput(
-    './gradlew',
+    command,
     [
       `${gradleBuildModule}:dependencies`,
       '--configuration',

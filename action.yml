@@ -9,6 +9,10 @@ inputs:
     description: "GitHub Personal Access Token (PAT). Defaults to PAT provided by Action runner"
     required: false
     default: ${{ github.token }}
+  use-gradlew:
+    required: true
+    description: 'Describes if the action will use `./gradlew` to retrieve the dependencies. Alternative `gradle`'
+    default: 'true'
   gradle-project-path:
     required: true
     description: 'Path to the root of the project to extract dependencies for'
