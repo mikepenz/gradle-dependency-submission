@@ -46,6 +46,7 @@ const process_1 = __nccwpck_require__(1647);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`📘 Reading input values`);
+        const useGradlew = core.getBooleanInput('use-gradlew');
         const gradleProjectPath = core.getInput('gradle-project-path').split(';');
         const gradleBuildModule = core.getInput('gradle-build-module').split(';');
         const gradleBuildConfiguration = core
@@ -62,7 +63,7 @@ function run() {
         core.endGroup();
         const manifests = [];
         for (let i = 0; i < length; i++) {
-            manifests.push(yield (0, process_1.prepareDependencyManifest)(gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration[i], gradleDependencyPath[i]));
+            manifests.push(yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration[i], gradleDependencyPath[i]));
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
@@ -295,9 +296,9 @@ const exec = __importStar(__nccwpck_require__(1514));
 const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const parse_1 = __nccwpck_require__(5223);
 const path = __importStar(__nccwpck_require__(1017));
-function prepareDependencyManifest(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath) {
+function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { packageCache, directDependencies, indirectDependencies } = yield processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        const { packageCache, directDependencies, indirectDependencies } = yield processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`);
         const manifest = new dependency_submission_toolkit_1.Manifest(path.dirname(gradleDependencyPath), path.join(gradleProjectPath, gradleDependencyPath));
         for (const pkgUrl of directDependencies) {
@@ -321,9 +322,9 @@ function prepareDependencyManifest(gradleProjectPath, gradleBuildModule, gradleB
     });
 }
 exports.prepareDependencyManifest = prepareDependencyManifest;
-function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
+function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
-        const dependencyList = yield processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        const dependencyList = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         /* add all direct and indirect packages to a new PackageCache */
         const cache = new dependency_submission_toolkit_1.PackageCache();
         const directDependencies = [];
@@ -361,10 +362,11 @@ function processGradleGraph(gradleProjectPath, gradleBuildModule, gradleBuildCon
     });
 }
 exports.processGradleGraph = processGradleGraph;
-function processDependencyList(gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
+function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`🔨 Processing gradle dependencies - '${gradleBuildModule}'`);
-        const dependencyList = yield exec.getExecOutput('./gradlew', [
+        const command = useGradlew ? './gradlew' : 'gradle';
+        const dependencyList = yield exec.getExecOutput(command, [
             `${gradleBuildModule}:dependencies`,
             '--configuration',
             gradleBuildConfiguration
@@ -3633,7 +3635,7 @@ class Dependency {
         this.scope = scope;
     }
     /**
-     * toJSON is a custom JSON-serializer. It will be called when JSON.stringify()
+     * toJSON is a custom JSON-serializer. It will be called when JSON.stringfy()
      * is called with this class or any object containing this class.
      *
      * @returns {object} with keys package_url, relationship, scope, and
@@ -3661,14 +3663,14 @@ class Manifest {
     }
     /**
      * addIndirectDependency adds a package as an indirect dependency to the
-     * manifest. Direct dependencies take precedence over indirect dependencies
+     * manifest. Direct dependencies take precendence over indirect dependencies
      * if a package is added as both.
      *
      * @param {Package} pkg
      * @param {DependencyScope} scope
      */
     addDirectDependency(pkg, scope) {
-        // will overwrite any previous indirect assignments
+        // will overwrite any previous indirect assigments
         this.resolved[pkg.packageID()] = new Dependency(pkg, 'direct', scope);
     }
     /**
@@ -3682,7 +3684,7 @@ class Manifest {
     addIndirectDependency(pkg, scope) {
         var _a;
         var _b, _c;
-        // nullish assignment to keep any previous assignments, including direct assignments
+        // nullish assigment to keep any previous assignments, including direct assigments
         (_a = (_b = this.resolved)[_c = pkg.packageID()]) !== null && _a !== void 0 ? _a : (_b[_c] = new Dependency(pkg, 'indirect', scope));
     }
     hasDependency(pkg) {
@@ -3774,7 +3776,7 @@ class PackageCache {
     /**
      * 'cache.package()' will be the most commonly used method of PackageCache.
      * package(identifier) will create and add a new Package to the PackageCache if no
-     * Packaging with a matching identifier exists in PackageCache, or return an existing
+     * Packaging with a matching identifer exists in PackageCache, or return an existing
      * Package if a match is found. The mutation in this case is expected; do not
      * use package(identifier) to determine if a package is already added.
      * Instead, use hasPackage or lookupPackage.
@@ -4026,11 +4028,11 @@ function jobFromContext(context) {
 }
 exports.jobFromContext = jobFromContext;
 /**
- * Snapshot is the top-level container for Dependency Submission
+ * Snapshot is the top-level container for Dependency Submisison
  */
 class Snapshot {
     /**
-     * All constructor parameters of a Snapshot are optional, but can be specified for specific overrides
+     * All construor parameters of a Snapshot are optional, but can be specified for specific overrides
      *
      * @param {Detector} detector
      * @param {Context} context
@@ -4077,7 +4079,7 @@ function submitSnapshot(snapshot, context = github.context) {
         core.notice('Submitting snapshot...');
         core.notice(snapshot.prettyJSON());
         const repo = context.repo;
-        const githubToken = core.getInput('token') || (yield core.getIDToken());
+        const githubToken = core.getInput('token') || core.getIDToken;
         const octokit = new rest_1.Octokit({
             auth: githubToken
         });
@@ -4090,7 +4092,7 @@ function submitSnapshot(snapshot, context = github.context) {
                 repo: repo.repo,
                 data: JSON.stringify(snapshot)
             });
-            core.notice('Snapshot successfully created at ' + response.data.created_at.toString());
+            core.notice('Snapshot sucessfully created at ' + response.data.created_at.toString());
         }
         catch (error) {
             if (error instanceof request_error_1.RequestError) {
