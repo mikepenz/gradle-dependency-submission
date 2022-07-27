@@ -1,10 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {
-  Snapshot,
-  Manifest,
-  submitSnapshot
-} from '@github/dependency-submission-toolkit'
+import {Snapshot, Manifest, submitSnapshot} from '@github/dependency-submission-toolkit'
 import {prepareDependencyManifest} from './process'
 
 async function run(): Promise<void> {
@@ -16,14 +12,8 @@ async function run(): Promise<void> {
   const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path')
 
   const length = gradleProjectPath.length
-  if (
-    [gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath].some(
-      x => x.length !== length
-    )
-  ) {
-    core.setFailed(
-      'When passing multiple projects, all inputs must have the same amount of items'
-    )
+  if ([gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath].some(x => x.length !== length)) {
+    core.setFailed('When passing multiple projects, all inputs must have the same amount of items')
     return
   }
 
@@ -47,13 +37,11 @@ async function run(): Promise<void> {
     {
       name: 'mikepenz/gradle-dependency-submission',
       url: 'https://github.com/mikepenz/gradle-dependency-submission',
-      version: '0.0.6'
+      version: '0.1.0'
     },
     github.context,
     {
-      correlator: `${github.context.job}-${gradleBuildModule.join(
-        '-'
-      )}-${gradleBuildConfiguration}`,
+      correlator: `${github.context.job}-${gradleBuildModule.join('-')}-${gradleBuildConfiguration}`,
       id: github.context.runId.toString()
     }
   )

@@ -10,9 +10,7 @@ const DEPENDENCY_OMITTED = ' (*)'
 const DEPENDENCY_LEVEL_INLINE = 5
 
 export function parseGradlePackage(pkg: string, level = 0): PackageURL {
-  const stripped = pkg
-    .substring((level + 1) * DEPENDENCY_LEVEL_INLINE)
-    .trimEnd()
+  const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd()
   const split = stripped.split(':')
   if (split.length < 3) {
     core.error(`Could not parse package: '${pkg}'`)
@@ -22,10 +20,7 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
 
   let strippedLineEnd = lineEnd
 
-  if (
-    lineEnd.endsWith(DEPENDENCY_CONSTRAINT) ||
-    lineEnd.endsWith(DEPENDENCY_OMITTED)
-  ) {
+  if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) || lineEnd.endsWith(DEPENDENCY_OMITTED)) {
     strippedLineEnd = lineEnd.substring(0, lineEnd.length - 4)
   }
   const endParts = strippedLineEnd.trim().split(' -> ')
@@ -35,14 +30,7 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
   } else {
     version = endParts[endParts.length - 1].trim()
   }
-  return new PackageURL(
-    'maven',
-    packageName,
-    libraryName,
-    version ?? null,
-    null,
-    null
-  )
+  return new PackageURL('maven', packageName, libraryName, version ?? null, null, null)
 }
 
 /**
@@ -50,13 +38,8 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
  * an associative list of PackageURLs. This expects the output of 'go mod
  * graph' as input
  */
-export function parseGradleGraph(
-  gradleBuildModule: string,
-  contents: string
-): [PackageURL, PackageURL | undefined][] {
-  core.startGroup(
-    `📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`
-  )
+export function parseGradleGraph(gradleBuildModule: string, contents: string): [PackageURL, PackageURL | undefined][] {
+  core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`)
   const pkgAssocList: [PackageURL, PackageURL | undefined][] = []
   const linesIterator = new PeekingIterator(contents.split('\n').values())
 
@@ -87,8 +70,7 @@ export function parseGradleDependency(
   if (
     level !== 0 &&
     !(
-      peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
-      peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END)
+      peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) || peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END)
     )
   ) {
     return
@@ -104,9 +86,7 @@ export function parseGradleDependency(
     const strippedLine = line.substring(level * DEPENDENCY_LEVEL_INLINE)
 
     if (line.startsWith(DEPENDENCY_PROJECT_START)) {
-      core.info(
-        `Found a project dependency, skipping (Currently not supported) - ${line}`
-      )
+      core.info(`Found a project dependency, skipping (Currently not supported) - ${line}`)
       iterator.next() // consume the next item
       continue
     } else if (
@@ -130,9 +110,7 @@ export function parseGradleDependency(
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[1])
     ) {
-      core.debug(
-        `Found a child dependency at an unsupported level, skipping. '${strippedLine}'`
-      )
+      core.debug(`Found a child dependency at an unsupported level, skipping. '${strippedLine}'`)
       iterator.next() // consume the next item
       continue
     } else if (level === 0) {

@@ -12,27 +12,21 @@ export async function prepareDependencyManifest(
   gradleBuildConfiguration: string,
   gradleDependencyPath: string
 ): Promise<Manifest> {
-  const {packageCache, directDependencies, indirectDependencies} =
-    await processGradleGraph(
-      useGradlew,
-      gradleProjectPath,
-      gradleBuildModule,
-      gradleBuildConfiguration
-    )
+  const {packageCache, directDependencies, indirectDependencies} = await processGradleGraph(
+    useGradlew,
+    gradleProjectPath,
+    gradleBuildModule,
+    gradleBuildConfiguration
+  )
 
   core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`)
-  const manifest = new Manifest(
-    path.dirname(gradleDependencyPath),
-    path.join(gradleProjectPath, gradleDependencyPath)
-  )
+  const manifest = new Manifest(path.dirname(gradleDependencyPath), path.join(gradleProjectPath, gradleDependencyPath))
 
   for (const pkgUrl of directDependencies) {
     const dep = packageCache.lookupPackage(pkgUrl)
     if (!dep) {
       core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`)
-      throw new Error(
-        'assertion failed: expected all direct dependencies to have entries in PackageCache'
-      )
+      throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache')
     }
     manifest.addDirectDependency(dep)
   }
@@ -41,9 +35,7 @@ export async function prepareDependencyManifest(
     const dep = packageCache.lookupPackage(pkgUrl)
     if (!dep) {
       core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`)
-      throw new Error(
-        'assertion failed: expected all indirect dependencies to have entries in PackageCache'
-      )
+      throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache')
     }
     manifest.addIndirectDependency(dep)
   }
@@ -109,18 +101,12 @@ export async function processDependencyList(
   const command = useGradlew ? './gradlew' : 'gradle'
   const dependencyList = await exec.getExecOutput(
     command,
-    [
-      `${gradleBuildModule}:dependencies`,
-      '--configuration',
-      gradleBuildConfiguration
-    ],
+    [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration],
     {cwd: gradleProjectPath}
   )
   if (dependencyList.exitCode !== 0) {
     core.error(dependencyList.stderr)
-    core.setFailed(
-      `'gradle ${gradleBuildModule}:dependencies resolution' failed!`
-    )
+    core.setFailed(`'gradle ${gradleBuildModule}:dependencies resolution' failed!`)
     throw new Error("Failed to execute 'gradle dependencies'")
   }
 

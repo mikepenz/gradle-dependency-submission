@@ -64,7 +64,7 @@ function run() {
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
             url: 'https://github.com/mikepenz/gradle-dependency-submission',
-            version: '0.0.6'
+            version: '0.1.0'
         }, github.context, {
             correlator: `${github.context.job}-${gradleBuildModule.join('-')}-${gradleBuildConfiguration}`,
             id: github.context.runId.toString()
@@ -121,9 +121,7 @@ const DEPENDENCY_CONSTRAINT = ' (c)';
 const DEPENDENCY_OMITTED = ' (*)';
 const DEPENDENCY_LEVEL_INLINE = 5;
 function parseGradlePackage(pkg, level = 0) {
-    const stripped = pkg
-        .substring((level + 1) * DEPENDENCY_LEVEL_INLINE)
-        .trimEnd();
+    const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd();
     const split = stripped.split(':');
     if (split.length < 3) {
         core.error(`Could not parse package: '${pkg}'`);
@@ -131,8 +129,7 @@ function parseGradlePackage(pkg, level = 0) {
     }
     const [packageName, libraryName, lineEnd] = split;
     let strippedLineEnd = lineEnd;
-    if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) ||
-        lineEnd.endsWith(DEPENDENCY_OMITTED)) {
+    if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) || lineEnd.endsWith(DEPENDENCY_OMITTED)) {
         strippedLineEnd = lineEnd.substring(0, lineEnd.length - 4);
     }
     const endParts = strippedLineEnd.trim().split(' -> ');
@@ -179,8 +176,7 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
         return;
     peekedLine = peekedLine.substring(level * DEPENDENCY_LEVEL_INLINE);
     if (level !== 0 &&
-        !(peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
-            peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END))) {
+        !(peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) || peekedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END))) {
         return;
     }
     // go through the dependencies
@@ -362,11 +358,7 @@ function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule,
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`🔨 Processing gradle dependencies - '${gradleBuildModule}'`);
         const command = useGradlew ? './gradlew' : 'gradle';
-        const dependencyList = yield exec.getExecOutput(command, [
-            `${gradleBuildModule}:dependencies`,
-            '--configuration',
-            gradleBuildConfiguration
-        ], { cwd: gradleProjectPath });
+        const dependencyList = yield exec.getExecOutput(command, [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration], { cwd: gradleProjectPath });
         if (dependencyList.exitCode !== 0) {
             core.error(dependencyList.stderr);
             core.setFailed(`'gradle ${gradleBuildModule}:dependencies resolution' failed!`);
