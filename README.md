@@ -98,8 +98,6 @@ $ npm run build && npm run package
 $ npm test
 ```
 
-> This action depends on the `Dependency Submission Toolkit` which is hosted in the GitHub npm registry. See the following steps to configure `npm`: https://github.com/github/dependency-submission-toolkit#installation
-
 ### Credits
 
 - [Go Dependency Submission Action](https://github.com/actions/go-dependency-submission/)
