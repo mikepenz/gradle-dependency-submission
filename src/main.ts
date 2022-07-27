@@ -10,14 +10,10 @@ import {prepareDependencyManifest} from './process'
 async function run(): Promise<void> {
   core.startGroup(`📘 Reading input values`)
   const useGradlew = core.getBooleanInput('use-gradlew')
-  const gradleProjectPath = core.getInput('gradle-project-path').split(';')
-  const gradleBuildModule = core.getInput('gradle-build-module').split(';')
-  const gradleBuildConfiguration = core
-    .getInput('gradle-build-configuration')
-    .split(';')
-  const gradleDependencyPath = core
-    .getInput('gradle-dependency-path')
-    .split(';')
+  const gradleProjectPath = core.getMultilineInput('gradle-project-path')
+  const gradleBuildModule = core.getMultilineInput('gradle-build-module')
+  const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration')
+  const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path')
 
   const length = gradleProjectPath.length
   if (
