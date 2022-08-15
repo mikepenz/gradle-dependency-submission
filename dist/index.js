@@ -123,11 +123,29 @@ const DEPENDENCY_LEVEL_INLINE = 5;
 function parseGradlePackage(pkg, level = 0) {
     const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd();
     const split = stripped.split(':');
-    if (split.length < 3) {
-        core.error(`Could not parse package: '${pkg}'`);
+    let packageName = '';
+    let libraryName = '';
+    let lineEnd = '';
+    if (split.length === 2) {
+        packageName = split[0];
+        const secondaryParts = split[1].trim().split(' -> ');
+        if (secondaryParts.length === 2) {
+            ;
+            [libraryName, lineEnd] = secondaryParts;
+        }
+        else {
+            core.error(`Could not parse package: '${pkg}' (1)`);
+            throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+        }
+    }
+    else if (split.length < 3) {
+        core.error(`Could not parse package: '${pkg}' (2)`);
         throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
     }
-    const [packageName, libraryName, lineEnd] = split;
+    else {
+        ;
+        [packageName, libraryName, lineEnd] = split;
+    }
     let strippedLineEnd = lineEnd;
     if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) || lineEnd.endsWith(DEPENDENCY_OMITTED)) {
         strippedLineEnd = lineEnd.substring(0, lineEnd.length - 4);
