@@ -123,11 +123,29 @@ const DEPENDENCY_LEVEL_INLINE = 5;
 function parseGradlePackage(pkg, level = 0) {
     const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd();
     const split = stripped.split(':');
-    if (split.length < 3) {
-        core.error(`Could not parse package: '${pkg}'`);
+    let packageName = '';
+    let libraryName = '';
+    let lineEnd = '';
+    if (split.length === 2) {
+        packageName = split[0];
+        const secondaryParts = split[1].trim().split(' -> ');
+        if (secondaryParts.length === 2) {
+            ;
+            [libraryName, lineEnd] = secondaryParts;
+        }
+        else {
+            core.error(`Could not parse package: '${pkg}' (1)`);
+            throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+        }
+    }
+    else if (split.length < 3) {
+        core.error(`Could not parse package: '${pkg}' (2)`);
         throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
     }
-    const [packageName, libraryName, lineEnd] = split;
+    else {
+        ;
+        [packageName, libraryName, lineEnd] = split;
+    }
     let strippedLineEnd = lineEnd;
     if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) || lineEnd.endsWith(DEPENDENCY_OMITTED)) {
         strippedLineEnd = lineEnd.substring(0, lineEnd.length - 4);
@@ -3623,7 +3641,7 @@ class Dependency {
         this.scope = scope;
     }
     /**
-     * toJSON is a custom JSON-serializer. It will be called when JSON.stringify()
+     * toJSON is a custom JSON-serializer. It will be called when JSON.stringfy()
      * is called with this class or any object containing this class.
      *
      * @returns {object} with keys package_url, relationship, scope, and
@@ -3651,14 +3669,14 @@ class Manifest {
     }
     /**
      * addIndirectDependency adds a package as an indirect dependency to the
-     * manifest. Direct dependencies take precedence over indirect dependencies
+     * manifest. Direct dependencies take precendence over indirect dependencies
      * if a package is added as both.
      *
      * @param {Package} pkg
      * @param {DependencyScope} scope
      */
     addDirectDependency(pkg, scope) {
-        // will overwrite any previous indirect assignments
+        // will overwrite any previous indirect assigments
         this.resolved[pkg.packageID()] = new Dependency(pkg, 'direct', scope);
     }
     /**
@@ -3672,7 +3690,7 @@ class Manifest {
     addIndirectDependency(pkg, scope) {
         var _a;
         var _b, _c;
-        // nullish assignment to keep any previous assignments, including direct assignments
+        // nullish assigment to keep any previous assignments, including direct assigments
         (_a = (_b = this.resolved)[_c = pkg.packageID()]) !== null && _a !== void 0 ? _a : (_b[_c] = new Dependency(pkg, 'indirect', scope));
     }
     hasDependency(pkg) {
@@ -3764,7 +3782,7 @@ class PackageCache {
     /**
      * 'cache.package()' will be the most commonly used method of PackageCache.
      * package(identifier) will create and add a new Package to the PackageCache if no
-     * Packaging with a matching identifier exists in PackageCache, or return an existing
+     * Packaging with a matching identifer exists in PackageCache, or return an existing
      * Package if a match is found. The mutation in this case is expected; do not
      * use package(identifier) to determine if a package is already added.
      * Instead, use hasPackage or lookupPackage.
@@ -4016,11 +4034,11 @@ function jobFromContext(context) {
 }
 exports.jobFromContext = jobFromContext;
 /**
- * Snapshot is the top-level container for Dependency Submission
+ * Snapshot is the top-level container for Dependency Submisison
  */
 class Snapshot {
     /**
-     * All constructor parameters of a Snapshot are optional, but can be specified for specific overrides
+     * All construor parameters of a Snapshot are optional, but can be specified for specific overrides
      *
      * @param {Detector} detector
      * @param {Context} context
@@ -4067,7 +4085,7 @@ function submitSnapshot(snapshot, context = github.context) {
         core.notice('Submitting snapshot...');
         core.notice(snapshot.prettyJSON());
         const repo = context.repo;
-        const githubToken = core.getInput('token') || (yield core.getIDToken());
+        const githubToken = core.getInput('token') || core.getIDToken;
         const octokit = new rest_1.Octokit({
             auth: githubToken
         });
@@ -4080,7 +4098,7 @@ function submitSnapshot(snapshot, context = github.context) {
                 repo: repo.repo,
                 data: JSON.stringify(snapshot)
             });
-            core.notice('Snapshot successfully created at ' + response.data.created_at.toString());
+            core.notice('Snapshot sucessfully created at ' + response.data.created_at.toString());
         }
         catch (error) {
             if (error instanceof request_error_1.RequestError) {

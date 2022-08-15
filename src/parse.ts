@@ -12,11 +12,24 @@ const DEPENDENCY_LEVEL_INLINE = 5
 export function parseGradlePackage(pkg: string, level = 0): PackageURL {
   const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd()
   const split = stripped.split(':')
-  if (split.length < 3) {
-    core.error(`Could not parse package: '${pkg}'`)
+  let packageName = ''
+  let libraryName = ''
+  let lineEnd = ''
+  if (split.length === 2) {
+    packageName = split[0]
+    const secondaryParts = split[1].trim().split(' -> ')
+    if (secondaryParts.length === 2) {
+      ;[libraryName, lineEnd] = secondaryParts
+    } else {
+      core.error(`Could not parse package: '${pkg}' (1)`)
+      throw Error(`The given '${pkg} can't be parsed as a gradle package.`)
+    }
+  } else if (split.length < 3) {
+    core.error(`Could not parse package: '${pkg}' (2)`)
     throw Error(`The given '${pkg} can't be parsed as a gradle package.`)
+  } else {
+    ;[packageName, libraryName, lineEnd] = split
   }
-  const [packageName, libraryName, lineEnd] = split
 
   let strippedLineEnd = lineEnd
 
