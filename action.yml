@@ -17,10 +17,6 @@ inputs:
     required: true
     description: 'Path to the root of the project to extract dependencies for'
     default: ''
-  gradle-dependency-path:
-    required: true
-    description: 'Path to the file containing the dependency specification. Relative to the provided project-path. Defaults to the root `build.gradle`'
-    default: 'build.gradle'
   gradle-build-module:
     required: true
     description: 'The module for which to resolve dependencies. E.g. `:app`'
@@ -29,6 +25,10 @@ inputs:
     required: true
     description: 'The configuration used to retrieve all dependencies from.'
     default: 'debugCompileClasspath'
+  gradle-dependency-path:
+    required: false
+    description: 'Path to the file containing the dependency specification. Relative to the provided project-path. Defaults to the root `build.gradle`'
+    default: 'build.gradle'
 runs:
   using: 'node16'
   main: 'dist/index.js'

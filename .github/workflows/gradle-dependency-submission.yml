@@ -30,13 +30,8 @@ jobs:
         with:
           gradle-project-path: |-
             gradle-example
-            gradle-example
-          gradle-dependency-path: |-
-            app/build.gradle
-            simple-app/build.gradle
           gradle-build-module: |-
             :app
             :simple-app
           gradle-build-configuration: |-
-            debugCompileClasspath
             debugCompileClasspath
