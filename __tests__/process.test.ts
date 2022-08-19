@@ -28,14 +28,35 @@ describe('processDependencyList', () => {
 })
 
 const EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT = [
-  {
-    type: "maven",
-    name: "kotlin-stdlib-jdk8",
-    namespace: "org.jetbrains.kotlin",
-    version: "1.7.10",
-    qualifiers: null,
-    subpath: null,
-  }
+  [
+    {
+      type: "maven",
+      name: "spring-core",
+      namespace: "org.springframework",
+      version: "5.3.0",
+      qualifiers: null,
+      subpath: null,
+    },
+    {
+      type: "maven",
+      name: "spring-jcl",
+      namespace: "org.springframework",
+      version: "5.3.0",
+      qualifiers: null,
+      subpath: null,
+    },
+  ],
+  [
+    {
+      type: "maven",
+      name: "spring-core",
+      namespace: "org.springframework",
+      version: "5.3.0",
+      qualifiers: null,
+      subpath: null,
+    },
+    undefined,
+  ],
 ]
 
 const EXPECTED_GRADLE_DEPENDENCY_OUTPUT = [

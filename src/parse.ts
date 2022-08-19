@@ -61,7 +61,8 @@ export function parseGradleGraph(gradleBuildModule: string, contents: string): [
 
   // iterate until the dependencies start!
   while (linesIterator.hasNext()) {
-    if (linesIterator.peek()?.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START)) {
+    const peek = linesIterator.peek()
+    if (peek?.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) || peek?.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END)) {
       break
     } else {
       linesIterator.next()
@@ -81,7 +82,7 @@ export function parseGradleDependency(
   level = 0
 ): void {
   // check if we are either at the end, or if we are not within a sub dependency
-  let peekedLine = iterator.peek()?.trim()
+  let peekedLine = iterator.peek()?.trimEnd() // don't trim start (or it could kick away child insets)
   if (!peekedLine) return
   peekedLine = peekedLine.substring(level * DEPENDENCY_LEVEL_INLINE)
   if (
@@ -95,7 +96,7 @@ export function parseGradleDependency(
 
   // go through the dependencies
   while (iterator.hasNext()) {
-    const line = iterator.peek()?.trim()
+    const line = iterator.peek()?.trimEnd() // don't trim start (or it could kick away child insets)
     if (!line) {
       iterator.next() // consume the empty line
       continue

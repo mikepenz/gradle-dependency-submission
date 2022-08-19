@@ -338,7 +338,6 @@ exports.parseGradlePackage = parseGradlePackage;
  * graph' as input
  */
 function parseGradleGraph(gradleBuildModule, contents) {
-    var _a;
     const start = Date.now();
     core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`);
     const pkgAssocList = [];
@@ -347,7 +346,8 @@ function parseGradleGraph(gradleBuildModule, contents) {
     core.info(`Dependency output of ${splitContent.length} lines`);
     // iterate until the dependencies start!
     while (linesIterator.hasNext()) {
-        if ((_a = linesIterator.peek()) === null || _a === void 0 ? void 0 : _a.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START)) {
+        const peek = linesIterator.peek();
+        if ((peek === null || peek === void 0 ? void 0 : peek.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START)) || (peek === null || peek === void 0 ? void 0 : peek.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END))) {
             break;
         }
         else {
@@ -364,7 +364,7 @@ exports.parseGradleGraph = parseGradleGraph;
 function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) {
     var _a, _b;
     // check if we are either at the end, or if we are not within a sub dependency
-    let peekedLine = (_a = iterator.peek()) === null || _a === void 0 ? void 0 : _a.trim();
+    let peekedLine = (_a = iterator.peek()) === null || _a === void 0 ? void 0 : _a.trimEnd(); // don't trim start (or it could kick away child insets)
     if (!peekedLine)
         return;
     peekedLine = peekedLine.substring(level * DEPENDENCY_LEVEL_INLINE);
@@ -374,7 +374,7 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
     }
     // go through the dependencies
     while (iterator.hasNext()) {
-        const line = (_b = iterator.peek()) === null || _b === void 0 ? void 0 : _b.trim();
+        const line = (_b = iterator.peek()) === null || _b === void 0 ? void 0 : _b.trimEnd(); // don't trim start (or it could kick away child insets)
         if (!line) {
             iterator.next(); // consume the empty line
             continue;
