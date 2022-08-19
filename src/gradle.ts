@@ -72,7 +72,7 @@ export async function retrieveGradleDependencies(
 }
 
 /**
- * Retrieves the `property` from a given `module` name
+ * Retrieves the `buildFile` `property` from a given `module` name in the configured gradle project.
  */
 export async function retrieveGradleBuildPath(
   useGradlew: boolean,
@@ -80,6 +80,16 @@ export async function retrieveGradleBuildPath(
   gradleBuildModule: string
 ): Promise<string | undefined> {
   return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile')
+}
+
+/**
+ * Retrieves the `name` `property` from the configured gradle project.
+ */
+export async function retrieveGradleProjectName(
+  useGradlew: boolean,
+  gradleProjectPath: string
+): Promise<string | undefined> {
+  return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name')
 }
 
 /**

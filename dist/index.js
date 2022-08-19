@@ -42,7 +42,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.retrieveGradleBuildPath = exports.retrieveGradleDependencies = exports.singlePropertySupport = void 0;
+exports.retrieveGradleProjectName = exports.retrieveGradleBuildPath = exports.retrieveGradleDependencies = exports.singlePropertySupport = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const semver_1 = __importDefault(__nccwpck_require__(1383));
@@ -106,7 +106,7 @@ function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildMo
 }
 exports.retrieveGradleDependencies = retrieveGradleDependencies;
 /**
- * Retrieves the `property` from a given `module` name
+ * Retrieves the `buildFile` `property` from a given `module` name in the configured gradle project.
  */
 function retrieveGradleBuildPath(useGradlew, gradleProjectPath, gradleBuildModule) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -114,6 +114,15 @@ function retrieveGradleBuildPath(useGradlew, gradleProjectPath, gradleBuildModul
     });
 }
 exports.retrieveGradleBuildPath = retrieveGradleBuildPath;
+/**
+ * Retrieves the `name` `property` from the configured gradle project.
+ */
+function retrieveGradleProjectName(useGradlew, gradleProjectPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name');
+    });
+}
+exports.retrieveGradleProjectName = retrieveGradleProjectName;
 /**
  * Retrieves the `property` from a given `module` name
  */
@@ -500,7 +509,12 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
             dependencyPath = path.join(gradleProjectPath, gradleDependencyPath);
         }
         core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`);
-        const manifest = new dependency_submission_toolkit_1.Manifest(path.dirname(dependencyPath), dependencyPath);
+        let name = path.dirname(dependencyPath);
+        if (name === '.') {
+            // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
+            name = (yield (0, gradle_1.retrieveGradleProjectName)(useGradlew, gradleProjectPath)) || dependencyPath;
+        }
+        const manifest = new dependency_submission_toolkit_1.Manifest(name, dependencyPath);
         core.info(`Connection ${directDependencies.length} direct dependencies`);
         for (const pkgUrl of directDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);

@@ -3,7 +3,7 @@ import * as core from '@actions/core'
 import {Manifest, PackageCache} from '@github/dependency-submission-toolkit'
 import {parseGradleGraph} from './parse'
 import * as path from 'path'
-import {retrieveGradleBuildPath, retrieveGradleDependencies} from './gradle'
+import {retrieveGradleBuildPath, retrieveGradleDependencies, retrieveGradleProjectName} from './gradle'
 import {convertToRelativePath} from './utils'
 
 export async function prepareDependencyManifest(
@@ -34,7 +34,12 @@ export async function prepareDependencyManifest(
   }
 
   core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`)
-  const manifest = new Manifest(path.dirname(dependencyPath), dependencyPath)
+  let name = path.dirname(dependencyPath)
+  if (name === '.') {
+    // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
+    name = (await retrieveGradleProjectName(useGradlew, gradleProjectPath)) || dependencyPath
+  }
+  const manifest = new Manifest(name, dependencyPath)
   core.info(`Connection ${directDependencies.length} direct dependencies`)
 
   for (const pkgUrl of directDependencies) {
