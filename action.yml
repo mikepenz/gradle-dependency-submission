@@ -27,8 +27,7 @@ inputs:
     default: 'debugCompileClasspath'
   gradle-dependency-path:
     required: false
-    description: 'Path to the file containing the dependency specification. Relative to the provided project-path. Defaults to the root `build.gradle`'
-    default: 'build.gradle'
+    description: 'Path to the file containing the dependency specification. Relative to the provided project-path. By default it will retrieve this via gradle.'
 runs:
   using: 'node16'
   main: 'dist/index.js'
