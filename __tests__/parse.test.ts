@@ -424,12 +424,19 @@ const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING = [
       qualifiers: null,
       subpath: null,
     },
-    undefined,
+    {
+      type: "maven",
+      name: "aspect4-commons-client",
+      namespace: "dk.eg.aspect4",
+      version: "22.3-SNAPSHOT",
+      qualifiers: null,
+      subpath: null,
+    },
   ],
   [
     {
       type: "maven",
-      name: "aspect4-commons-client",
+      name: "aspect4-application-support-api",
       namespace: "dk.eg.aspect4",
       version: "22.3-SNAPSHOT",
       qualifiers: null,
