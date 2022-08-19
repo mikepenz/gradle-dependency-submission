@@ -176,7 +176,7 @@ function run() {
         const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration');
         const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path');
         const length = gradleBuildModule.length;
-        if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== length || x.length === 1)) {
+        if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
             core.setFailed('When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1');
             return;
         }
