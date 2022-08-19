@@ -11,9 +11,16 @@ async function run(): Promise<void> {
   const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration')
   const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path')
 
-  const length = gradleProjectPath.length
-  if ([gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath].some(x => x.length !== length)) {
-    core.setFailed('When passing multiple projects, all inputs must have the same amount of items')
+  const length = gradleBuildModule.length
+  if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
+    core.setFailed(
+      'When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1'
+    )
+    return
+  } else if (gradleDependencyPath.length !== 0 && gradleDependencyPath.length !== length) {
+    core.setFailed(
+      'When passing the `gradle-dependency-path`, this input must have the same amount of items as the `gradle-build-module` or none'
+    )
     return
   }
 
@@ -25,10 +32,10 @@ async function run(): Promise<void> {
     manifests.push(
       await prepareDependencyManifest(
         useGradlew,
-        gradleProjectPath[i],
+        gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i],
         gradleBuildModule[i],
-        gradleBuildConfiguration[i],
-        gradleDependencyPath[i]
+        gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i],
+        gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined
       )
     )
   }

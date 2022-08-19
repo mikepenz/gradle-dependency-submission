@@ -62,22 +62,40 @@ jobs:
         uses: mikepenz/gradle-dependency-submission@{latest}
         with:
           gradle-project-path: "gradle-example"
-          gradle-dependency-path: "app/build.gradle"
           gradle-build-module: ":app"
           gradle-build-configuration: "debugCompileClasspath"
 ```
 
-> ℹ️ Currently the action has to be run on the default branch. Running it as part of a PR won't update the [Dependency graph](https://github.com/mikepenz/gradle-dependency-submission/network/dependencies) of your projects [Insights](https://github.com/mikepenz/gradle-dependency-submission/pulse)
+<details><summary><b>Multi Module Config</b></summary>
+<p>
+
+```yml
+- name: Gradle Dependency Submission
+  uses: mikepenz/gradle-dependency-submission@{latest}
+  with:
+    gradle-project-path: |-
+      gradle-example
+    gradle-build-module: |-
+      :app
+      :simple-app
+    gradle-build-configuration: |-
+      debugCompileClasspath
+```
+
+</p>
+</details>
+
+> ℹ️ Currently the action has to be run on the default branch. Running it as part of a PR won't update the [Dependency graph](https://github.com/mikepenz/gradle-dependency-submission/network/dependencies) of your projects [Insights](https://github.com/mikepenz/gradle-dependency-submission/pulse) - This seems to be a GitHub requirement.
 
 ### Inputs
 
 | **Input**      | **Description**                                                                                                                                                       |
 |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `use-gradlew`    | Defines if `./gradlew` or `gradle` cli will be used to retrieve the dependencies. Defaults to 'true'.|
+| `use-gradlew`    | Defines if `./gradlew` or `gradle` cli will be used to retrieve the dependencies. Defaults to 'true' e.g. `./gradlew`.|
 | `gradle-project-path`    | Defines the path to the gradle project. Defaults to ''. |
-| `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. Defaults to 'build.gradle'. |
 | `gradle-build-module`    | Defines the module to retrieve the dependencies for. This is often `:app`. Defaults to ''.  |
 | `gradle-build-configuration`    | The configuration for which dependencies are resolved. Defaults to `debugCompileClasspath`.  |
+| `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. If not provided, automatically resolved via gradle and the `module` config. |
 
 ## Sample 🖥️
 

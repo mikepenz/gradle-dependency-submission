@@ -26,10 +26,12 @@
   "license": "Apache 2.0",
   "dependencies": {
     "@actions/core": "^1.9.1",
-    "@github/dependency-submission-toolkit": "^1.2.2"
+    "@github/dependency-submission-toolkit": "^1.2.2",
+    "semver": "^7.3.7"
   },
   "devDependencies": {
     "@types/node": "^18.7.4",
+    "@types/semver": "^7.3.12",
     "@typescript-eslint/parser": "^5.33.0",
     "@vercel/ncc": "^0.34.0",
     "eslint": "^8.22.0",

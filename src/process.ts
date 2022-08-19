@@ -1,16 +1,17 @@
 import {PackageURL} from 'packageurl-js'
 import * as core from '@actions/core'
-import * as exec from '@actions/exec'
 import {Manifest, PackageCache} from '@github/dependency-submission-toolkit'
 import {parseGradleGraph} from './parse'
 import * as path from 'path'
+import {retrieveGradleBuildPath, retrieveGradleDependencies} from './gradle'
+import {convertToRelativePath} from './utils'
 
 export async function prepareDependencyManifest(
   useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
   gradleBuildConfiguration: string,
-  gradleDependencyPath: string
+  gradleDependencyPath: string | undefined
 ): Promise<Manifest> {
   const {packageCache, directDependencies, indirectDependencies} = await processGradleGraph(
     useGradlew,
@@ -19,8 +20,22 @@ export async function prepareDependencyManifest(
     gradleBuildConfiguration
   )
 
+  let dependencyPath: string
+  if (gradleDependencyPath === undefined) {
+    const buildPath = await retrieveGradleBuildPath(useGradlew, gradleProjectPath, gradleBuildModule)
+    if (buildPath === undefined) {
+      core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${gradleBuildModule}`)
+      throw new Error(`Failed to retrieve gradle build path.`)
+    } else {
+      dependencyPath = convertToRelativePath(buildPath)
+    }
+  } else {
+    dependencyPath = path.join(gradleProjectPath, gradleDependencyPath)
+  }
+
   core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`)
-  const manifest = new Manifest(path.dirname(gradleDependencyPath), path.join(gradleProjectPath, gradleDependencyPath))
+  const manifest = new Manifest(path.dirname(dependencyPath), dependencyPath)
+  core.info(`Connection ${directDependencies.length} direct dependencies`)
 
   for (const pkgUrl of directDependencies) {
     const dep = packageCache.lookupPackage(pkgUrl)
@@ -31,6 +46,7 @@ export async function prepareDependencyManifest(
     manifest.addDirectDependency(dep)
   }
 
+  core.info(`Connection ${indirectDependencies.length} indirect dependencies`)
   for (const pkgUrl of indirectDependencies) {
     const dep = packageCache.lookupPackage(pkgUrl)
     if (!dep) {
@@ -96,22 +112,15 @@ export async function processDependencyList(
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<[PackageURL, PackageURL | undefined][]> {
-  core.startGroup(`🔨 Processing gradle dependencies - '${gradleBuildModule}'`)
-
-  const command = useGradlew ? './gradlew' : 'gradle'
-  const dependencyList = await exec.getExecOutput(
-    command,
-    [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration],
-    {cwd: gradleProjectPath}
+  core.startGroup(`🔨 Processing gradle dependencies for module - '${gradleBuildModule}'`)
+  const dependencyList = await retrieveGradleDependencies(
+    useGradlew,
+    gradleProjectPath,
+    gradleBuildModule,
+    gradleBuildConfiguration
   )
-  if (dependencyList.exitCode !== 0) {
-    core.error(dependencyList.stderr)
-    core.setFailed(`'gradle ${gradleBuildModule}:dependencies resolution' failed!`)
-    throw new Error("Failed to execute 'gradle dependencies'")
-  }
-
   core.endGroup()
-  return parseGradleGraph(gradleBuildModule, dependencyList.stdout)
+  return parseGradleGraph(gradleBuildModule, dependencyList)
 }
 
 interface Result {
