@@ -43,6 +43,15 @@ jobs:
 
       - uses: actions/checkout@v3
 
+      - name: Test Single Module Project in root
+        uses: ./
+        with:
+          use-gradlew: false
+          gradle-build-module: |-
+            :
+          gradle-build-configuration: |-
+            compileClasspath
+            
       - name: Test Multi Module Project in subfolder
         uses: ./
         with:
@@ -53,12 +62,3 @@ jobs:
             :simple-app
           gradle-build-configuration: |-
             debugCompileClasspath
-
-      - name: Test Single Module Project in root
-        uses: ./
-        with:
-          use-gradlew: false
-          gradle-build-module: |
-            :
-          gradle-build-configuration: |-
-            compileClasspath

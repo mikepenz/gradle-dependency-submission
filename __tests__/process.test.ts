@@ -14,7 +14,29 @@ describe('processDependencyList', () => {
     expect(dependencies).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(EXPECTED_GRADLE_DEPENDENCY_OUTPUT)
   })
+
+  test('run in root', async () => {
+    const dependencies = await processDependencyList(
+      false,
+      '',
+      ':',
+      'compileClasspath'
+    )
+    expect(dependencies).toHaveLength(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT.length)
+    expect(dependencies).toEqual(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT)
+  })
 })
+
+const EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT = [
+  {
+    type: "maven",
+    name: "kotlin-stdlib-jdk8",
+    namespace: "org.jetbrains.kotlin",
+    version: "1.7.10",
+    qualifiers: null,
+    subpath: null,
+  }
+]
 
 const EXPECTED_GRADLE_DEPENDENCY_OUTPUT = [
   [
