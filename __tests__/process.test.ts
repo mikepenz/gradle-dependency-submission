@@ -14,7 +14,50 @@ describe('processDependencyList', () => {
     expect(dependencies).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(EXPECTED_GRADLE_DEPENDENCY_OUTPUT)
   })
+
+  test('run in root', async () => {
+    const dependencies = await processDependencyList(
+      false,
+      '',
+      ':',
+      'compileClasspath'
+    )
+    expect(dependencies).toHaveLength(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT.length)
+    expect(dependencies).toEqual(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT)
+  })
 })
+
+const EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT = [
+  [
+    {
+      type: "maven",
+      name: "spring-core",
+      namespace: "org.springframework",
+      version: "5.3.0",
+      qualifiers: null,
+      subpath: null,
+    },
+    {
+      type: "maven",
+      name: "spring-jcl",
+      namespace: "org.springframework",
+      version: "5.3.0",
+      qualifiers: null,
+      subpath: null,
+    },
+  ],
+  [
+    {
+      type: "maven",
+      name: "spring-core",
+      namespace: "org.springframework",
+      version: "5.3.0",
+      qualifiers: null,
+      subpath: null,
+    },
+    undefined,
+  ],
+]
 
 const EXPECTED_GRADLE_DEPENDENCY_OUTPUT = [
   [

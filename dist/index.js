@@ -42,10 +42,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.retrieveGradleBuildPath = exports.retrieveGradleDependencies = exports.fetchGradleVersion = exports.singlePropertySupport = void 0;
+exports.retrieveGradleBuildPath = exports.retrieveGradleDependencies = exports.singlePropertySupport = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const semver_1 = __importDefault(__nccwpck_require__(1383));
+/**
+ * Detects if the used gradle version supports `single properties`.
+ * E.g. 7.5.0 or higher.
+ */
 function singlePropertySupport(useGradlew, gradleProjectPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const version = yield fetchGradleVersion(useGradlew, gradleProjectPath);
@@ -53,9 +57,12 @@ function singlePropertySupport(useGradlew, gradleProjectPath) {
     });
 }
 exports.singlePropertySupport = singlePropertySupport;
+/**
+ * Fetches the version of gradle in use via the CLI.
+ */
 function fetchGradleVersion(useGradlew, gradleProjectPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const command = useGradlew ? './gradlew' : 'gradle';
+        const command = retrieveGradleCLI(useGradlew);
         const versionOutput = yield exec.getExecOutput(command, ['--version'], {
             cwd: gradleProjectPath,
             silent: !core.isDebug()
@@ -76,19 +83,22 @@ function fetchGradleVersion(useGradlew, gradleProjectPath) {
         throw new Error(`Failed to extract gradle version`);
     });
 }
-exports.fetchGradleVersion = fetchGradleVersion;
+/**
+ * Retrieves all dependencies from gradle by running the `dependencies` task for the provided project module and configuration.
+ */
 function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         const start = Date.now();
-        const command = useGradlew ? './gradlew' : 'gradle';
-        const dependencyList = yield exec.getExecOutput(command, [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration], {
+        const command = retrieveGradleCLI(useGradlew);
+        const module = verifyModule(gradleBuildModule);
+        const dependencyList = yield exec.getExecOutput(command, [`${module}:dependencies`, '--configuration', gradleBuildConfiguration], {
             cwd: gradleProjectPath,
             silent: !core.isDebug()
         });
         if (dependencyList.exitCode !== 0) {
             core.error(dependencyList.stderr);
-            core.setFailed(`'${command} ${gradleBuildModule}:dependencies' resolution failed!`);
-            throw new Error(`Failed to execute '${command} ${gradleBuildModule}:dependencies'`);
+            core.setFailed(`'${command} ${module}:dependencies' resolution failed!`);
+            throw new Error(`Failed to execute '${command} ${module}:dependencies'`);
         }
         core.info(`Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${Date.now() - start}ms`);
         return dependencyList.stdout;
@@ -113,24 +123,42 @@ function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule
             core.warning(`The current gradle version does not support retrieving a single property. Skipping retrieval of ${property} for ${gradleBuildModule}`);
             return undefined;
         }
-        const command = useGradlew ? './gradlew' : 'gradle';
-        const propertyOutput = yield exec.getExecOutput(command, [`${gradleBuildModule}:properties`, '-q', '--property', property], {
+        const command = retrieveGradleCLI(useGradlew);
+        const module = verifyModule(gradleBuildModule);
+        const propertyOutput = yield exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
             cwd: gradleProjectPath,
             silent: !core.isDebug()
         });
         if (propertyOutput.exitCode !== 0) {
             core.error(propertyOutput.stderr);
-            core.setFailed(`'${command} ${gradleBuildModule}:properties' retrieval failed!`);
-            throw new Error(`Failed to execute '${command} ${gradleBuildModule}:properties'`);
+            core.setFailed(`'${command} ${module}:properties' retrieval failed!`);
+            throw new Error(`Failed to execute '${command} ${module}:properties'`);
         }
         const output = propertyOutput.stdout;
         const matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`));
         if (matched != null) {
             return matched[2];
         }
-        core.warning(`Failed to retrieve the '${property}' for ${gradleBuildModule}`);
+        core.warning(`Failed to retrieve the '${property}' for '${gradleBuildModule}'`);
         return undefined;
     });
+}
+/**
+ * Returns the gradle cli configured for the action
+ */
+function retrieveGradleCLI(useGradlew) {
+    return useGradlew ? './gradlew' : 'gradle';
+}
+/**
+ * Detect if a root module was passed, if yes we don't require `:` for the commands.
+ */
+function verifyModule(module) {
+    if (module === ':') {
+        return '';
+    }
+    else {
+        return module;
+    }
 }
 
 
@@ -182,10 +210,14 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`📘 Reading input values`);
         const useGradlew = core.getBooleanInput('use-gradlew');
-        const gradleProjectPath = core.getMultilineInput('gradle-project-path');
+        let gradleProjectPath = core.getMultilineInput('gradle-project-path');
         const gradleBuildModule = core.getMultilineInput('gradle-build-module');
         const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration');
         const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path');
+        if (gradleProjectPath.length === 0) {
+            core.debug(`No 'gradle-project-path' passed, using 'root'`);
+            gradleProjectPath = [''];
+        }
         const length = gradleBuildModule.length;
         if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
             core.setFailed('When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1');
@@ -306,7 +338,6 @@ exports.parseGradlePackage = parseGradlePackage;
  * graph' as input
  */
 function parseGradleGraph(gradleBuildModule, contents) {
-    var _a;
     const start = Date.now();
     core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`);
     const pkgAssocList = [];
@@ -315,7 +346,8 @@ function parseGradleGraph(gradleBuildModule, contents) {
     core.info(`Dependency output of ${splitContent.length} lines`);
     // iterate until the dependencies start!
     while (linesIterator.hasNext()) {
-        if ((_a = linesIterator.peek()) === null || _a === void 0 ? void 0 : _a.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START)) {
+        const peek = linesIterator.peek();
+        if ((peek === null || peek === void 0 ? void 0 : peek.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START)) || (peek === null || peek === void 0 ? void 0 : peek.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END))) {
             break;
         }
         else {
@@ -332,7 +364,7 @@ exports.parseGradleGraph = parseGradleGraph;
 function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) {
     var _a, _b;
     // check if we are either at the end, or if we are not within a sub dependency
-    let peekedLine = (_a = iterator.peek()) === null || _a === void 0 ? void 0 : _a.trim();
+    let peekedLine = (_a = iterator.peek()) === null || _a === void 0 ? void 0 : _a.trimEnd(); // don't trim start (or it could kick away child insets)
     if (!peekedLine)
         return;
     peekedLine = peekedLine.substring(level * DEPENDENCY_LEVEL_INLINE);
@@ -342,7 +374,7 @@ function parseGradleDependency(pkgAssocList, iterator, parentParent, level = 0) 
     }
     // go through the dependencies
     while (iterator.hasNext()) {
-        const line = (_b = iterator.peek()) === null || _b === void 0 ? void 0 : _b.trim();
+        const line = (_b = iterator.peek()) === null || _b === void 0 ? void 0 : _b.trimEnd(); // don't trim start (or it could kick away child insets)
         if (!line) {
             iterator.next(); // consume the empty line
             continue;

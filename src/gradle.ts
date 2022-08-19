@@ -2,13 +2,20 @@ import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import semver from 'semver'
 
+/**
+ * Detects if the used gradle version supports `single properties`.
+ * E.g. 7.5.0 or higher.
+ */
 export async function singlePropertySupport(useGradlew: boolean, gradleProjectPath: string): Promise<boolean> {
   const version = await fetchGradleVersion(useGradlew, gradleProjectPath)
   return semver.satisfies(version, '>=7.5.0')
 }
 
-export async function fetchGradleVersion(useGradlew: boolean, gradleProjectPath: string): Promise<string> {
-  const command = useGradlew ? './gradlew' : 'gradle'
+/**
+ * Fetches the version of gradle in use via the CLI.
+ */
+async function fetchGradleVersion(useGradlew: boolean, gradleProjectPath: string): Promise<string> {
+  const command = retrieveGradleCLI(useGradlew)
   const versionOutput = await exec.getExecOutput(command, ['--version'], {
     cwd: gradleProjectPath,
     silent: !core.isDebug()
@@ -30,6 +37,9 @@ export async function fetchGradleVersion(useGradlew: boolean, gradleProjectPath:
   throw new Error(`Failed to extract gradle version`)
 }
 
+/**
+ * Retrieves all dependencies from gradle by running the `dependencies` task for the provided project module and configuration.
+ */
 export async function retrieveGradleDependencies(
   useGradlew: boolean,
   gradleProjectPath: string,
@@ -37,10 +47,12 @@ export async function retrieveGradleDependencies(
   gradleBuildConfiguration: string
 ): Promise<string> {
   const start = Date.now()
-  const command = useGradlew ? './gradlew' : 'gradle'
+
+  const command = retrieveGradleCLI(useGradlew)
+  const module = verifyModule(gradleBuildModule)
   const dependencyList = await exec.getExecOutput(
     command,
-    [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration],
+    [`${module}:dependencies`, '--configuration', gradleBuildConfiguration],
     {
       cwd: gradleProjectPath,
       silent: !core.isDebug()
@@ -48,8 +60,8 @@ export async function retrieveGradleDependencies(
   )
   if (dependencyList.exitCode !== 0) {
     core.error(dependencyList.stderr)
-    core.setFailed(`'${command} ${gradleBuildModule}:dependencies' resolution failed!`)
-    throw new Error(`Failed to execute '${command} ${gradleBuildModule}:dependencies'`)
+    core.setFailed(`'${command} ${module}:dependencies' resolution failed!`)
+    throw new Error(`Failed to execute '${command} ${module}:dependencies'`)
   }
   core.info(
     `Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${
@@ -86,19 +98,17 @@ async function retrieveGradleProperty(
     return undefined
   }
 
-  const command = useGradlew ? './gradlew' : 'gradle'
-  const propertyOutput = await exec.getExecOutput(
-    command,
-    [`${gradleBuildModule}:properties`, '-q', '--property', property],
-    {
-      cwd: gradleProjectPath,
-      silent: !core.isDebug()
-    }
-  )
+  const command = retrieveGradleCLI(useGradlew)
+  const module = verifyModule(gradleBuildModule)
+
+  const propertyOutput = await exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
+    cwd: gradleProjectPath,
+    silent: !core.isDebug()
+  })
   if (propertyOutput.exitCode !== 0) {
     core.error(propertyOutput.stderr)
-    core.setFailed(`'${command} ${gradleBuildModule}:properties' retrieval failed!`)
-    throw new Error(`Failed to execute '${command} ${gradleBuildModule}:properties'`)
+    core.setFailed(`'${command} ${module}:properties' retrieval failed!`)
+    throw new Error(`Failed to execute '${command} ${module}:properties'`)
   }
 
   const output = propertyOutput.stdout
@@ -108,6 +118,24 @@ async function retrieveGradleProperty(
     return matched[2]
   }
 
-  core.warning(`Failed to retrieve the '${property}' for ${gradleBuildModule}`)
+  core.warning(`Failed to retrieve the '${property}' for '${gradleBuildModule}'`)
   return undefined
+}
+
+/**
+ * Returns the gradle cli configured for the action
+ */
+function retrieveGradleCLI(useGradlew: boolean): string {
+  return useGradlew ? './gradlew' : 'gradle'
+}
+
+/**
+ * Detect if a root module was passed, if yes we don't require `:` for the commands.
+ */
+function verifyModule(module: string): string {
+  if (module === ':') {
+    return ''
+  } else {
+    return module
+  }
 }

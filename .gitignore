@@ -97,3 +97,15 @@ Thumbs.db
 # Ignore built ts files
 __tests__/runner/*
 lib/**/*
+
+# Gradle project
+*.iml
+.gradle
+/local.properties
+.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
