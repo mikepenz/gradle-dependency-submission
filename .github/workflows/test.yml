@@ -40,8 +40,11 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             gradle-${{ runner.os }}-
+
       - uses: actions/checkout@v3
-      - uses: ./
+
+      - name: Test Multi Module Project in subfolder
+        uses: ./
         with:
           gradle-project-path: |-
             gradle-example
@@ -50,3 +53,12 @@ jobs:
             :simple-app
           gradle-build-configuration: |-
             debugCompileClasspath
+
+      - name: Test Single Module Project in root
+        uses: ./
+        with:
+          use-gradlew: false
+          gradle-build-module: |
+            :
+          gradle-build-configuration: |-
+            compileClasspath
