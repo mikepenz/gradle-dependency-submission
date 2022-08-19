@@ -23,7 +23,7 @@ inputs:
     default: ''
   gradle-build-configuration:
     required: true
-    description: 'The configuration used to retrieve all dependencies from.'
+    description: 'The configuration used to retrieve all dependencies from. Defaults to `debugCompileClasspath` (Android). Java projects usually use `compileClasspath`'
     default: 'debugCompileClasspath'
   gradle-dependency-path:
     required: false
