@@ -459,7 +459,7 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
             }
         }
         else {
-            dependencyPath = gradleDependencyPath;
+            dependencyPath = path.join(gradleProjectPath, gradleDependencyPath);
         }
         core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`);
         const manifest = new dependency_submission_toolkit_1.Manifest(path.dirname(dependencyPath), dependencyPath);

@@ -30,7 +30,7 @@ export async function prepareDependencyManifest(
       dependencyPath = convertToRelativePath(buildPath)
     }
   } else {
-    dependencyPath = gradleDependencyPath
+    dependencyPath = path.join(gradleProjectPath, gradleDependencyPath)
   }
 
   core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`)
