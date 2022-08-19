@@ -33,6 +33,7 @@ jobs:
           gradle-build-module: |-
             :app
             :simple-app
+            :library-parent-parent
           gradle-build-configuration: |-
             debugCompileClasspath
           sub-module-mode: INDIVIDUAL
