@@ -66,6 +66,25 @@ jobs:
           gradle-build-configuration: "debugCompileClasspath"
 ```
 
+<details><summary><b>Root Module Config</b></summary>
+<p>
+
+The following example showcases a gradle module in the root, without a module name, and no sub-folder.
+
+```yml
+- name: Root Gradle Dependency Submission
+  uses: mikepenz/gradle-dependency-submission@{latest}
+  with:
+    use-gradlew: false
+    gradle-build-module: |-
+      :
+    gradle-build-configuration: |-
+      compileClasspath
+```
+
+</p>
+</details>
+
 <details><summary><b>Multi Module Config</b></summary>
 <p>
 
