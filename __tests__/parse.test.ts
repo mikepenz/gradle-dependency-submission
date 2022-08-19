@@ -1,5 +1,6 @@
-import {jest, describe, test, expect} from '@jest/globals'
-import {parseGradleGraph} from '../src/parse'
+import { jest, describe, test, expect } from '@jest/globals'
+import { parseGradleGraph } from '../src/parse'
+import fs from 'fs';
 
 const GRADLE_DEPENDENCY_OUTPUT = `
 > Task :app:dependencies
@@ -450,7 +451,7 @@ jest.setTimeout(180000)
 
 describe('parseGradleDependencyOutput', () => {
   test('parses output of gradle dependency command into dependencies', () => {
-    const dependencies = parseGradleGraph("test", GRADLE_DEPENDENCY_OUTPUT)
+    const dependencies = parseGradleGraph("test", GRADLE_DEPENDENCY_OUTPUT).packages
 
     expect(Object.values(dependencies).length).toEqual(
       GRADLE_EXAMPLE_DEPENDENCY_OUTPUT.length
@@ -459,13 +460,448 @@ describe('parseGradleDependencyOutput', () => {
   })
 
   test('parses output of gradle dependency command with bom into dependencies', () => {
-    const dependencies = parseGradleGraph("test", GRADLE_DEPENDENCY_OUTPUT_SPRING)
+    const dependencies = parseGradleGraph("test", GRADLE_DEPENDENCY_OUTPUT_SPRING).packages
 
     expect(Object.values(dependencies).length).toEqual(
       GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING.length
     )
     expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING)
   })
+
+
+  test('parses output of gradle dependency command with sub projects', () => {
+    const rootProject = parseGradleGraph("test", fs.readFileSync("__tests__/elasticoutput.txt", 'utf8'), 'INDIVIDUAL')
+    expect(rootProject).toEqual(GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT)
+  })
 })
+
+const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
+  dependencyPath: undefined,
+  childProjects: [
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-core",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-logging",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-secure-sm",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [
+        {
+          dependencyPath: undefined,
+          childProjects: [
+          ],
+          packages: [
+          ],
+          name: ":libs:elasticsearch-core",
+        },
+      ],
+      packages: [],
+      name: ":libs:elasticsearch-x-content",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-geo",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [
+        {
+          dependencyPath: undefined,
+          childProjects: [
+          ],
+          packages: [
+          ],
+          name: ":libs:elasticsearch-core",
+        },
+      ],
+      packages: [
+        [
+          {
+            type: "maven",
+            name: "lz4-java",
+            namespace: "org.lz4",
+            version: "1.8.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          undefined,
+        ],
+      ],
+      name: ":libs:elasticsearch-lz4",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [
+        {
+          dependencyPath: undefined,
+          childProjects: [
+          ],
+          packages: [
+          ],
+          name: ":libs:elasticsearch-core",
+        },
+      ],
+      packages: [
+        [
+          {
+            type: "maven",
+            name: "jopt-simple",
+            namespace: "net.sf.jopt-simple",
+            version: "5.0.2",
+            qualifiers: null,
+            subpath: null,
+          },
+          undefined,
+        ],
+      ],
+      name: ":libs:elasticsearch-cli",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-plugin-classloader",
+    },
+  ],
+  packages: [
+    [
+      {
+        type: "maven",
+        name: "lucene-core",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-analysis-common",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-backward-codecs",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-grouping",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-highlighter",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-join",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-memory",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-misc",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-queries",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-queryparser",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-sandbox",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "lucene-suggest",
+        namespace: "org.apache.lucene",
+        version: "9.3.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "t-digest",
+        namespace: "com.tdunning",
+        version: "3.2",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "HdrHistogram",
+        namespace: "org.hdrhistogram",
+        version: "2.1.9",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "log4j-api",
+        namespace: "org.apache.logging.log4j",
+        version: "2.18.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "log4j-core",
+        namespace: "org.apache.logging.log4j",
+        version: "2.18.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "jna",
+        namespace: "net.java.dev.jna",
+        version: "5.10.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "log4j2-ecs-layout",
+        namespace: "co.elastic.logging",
+        version: "1.2.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "ecs-logging-core",
+        namespace: "co.elastic.logging",
+        version: "1.2.0",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+    [
+      {
+        type: "maven",
+        name: "hppc",
+        namespace: "com.carrotsearch",
+        version: "0.8.1",
+        qualifiers: null,
+        subpath: null,
+      },
+      undefined,
+    ],
+  ],
+  name: "test",
+  projectRegistry: [
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-core",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-logging",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-secure-sm",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [
+        {
+          dependencyPath: undefined,
+          childProjects: [
+          ],
+          packages: [
+          ],
+          name: ":libs:elasticsearch-core",
+        },
+      ],
+      packages: [],
+      name: ":libs:elasticsearch-x-content",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-geo",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [
+        {
+          dependencyPath: undefined,
+          childProjects: [
+          ],
+          packages: [
+          ],
+          name: ":libs:elasticsearch-core",
+        },
+      ],
+      packages: [
+        [
+          {
+            type: "maven",
+            name: "lz4-java",
+            namespace: "org.lz4",
+            version: "1.8.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          undefined,
+        ],
+      ],
+      name: ":libs:elasticsearch-lz4",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [
+        {
+          dependencyPath: undefined,
+          childProjects: [
+          ],
+          packages: [
+          ],
+          name: ":libs:elasticsearch-core",
+        },
+      ],
+      packages: [
+        [
+          {
+            type: "maven",
+            name: "jopt-simple",
+            namespace: "net.sf.jopt-simple",
+            version: "5.0.2",
+            qualifiers: null,
+            subpath: null,
+          },
+          undefined,
+        ],
+      ],
+      name: ":libs:elasticsearch-cli",
+    },
+    {
+      dependencyPath: undefined,
+      childProjects: [],
+      packages: [],
+      name: ":libs:elasticsearch-plugin-classloader",
+    },
+  ],
+}
 
 

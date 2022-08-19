@@ -35,3 +35,4 @@ jobs:
             :simple-app
           gradle-build-configuration: |-
             debugCompileClasspath
+          sub-module-mode: INDIVIDUAL

@@ -1,0 +1,52 @@
+=======================================
+Elasticsearch Build Hamster says Hello!
+  Gradle Version        : 7.5.1
+  OS Info               : Linux 5.4.0-1086-azure (amd64)
+  JDK Version           : 17.0.2 (Oracle)
+  JAVA_HOME             : /opt/java/17.0.2
+  Random Testing Seed   : 6C74AA9425B47F9E
+  In FIPS 140 mode      : false
+=======================================
+
+------------------------------------------------------------
+Project ':server' - Elasticsearch subproject :server
+------------------------------------------------------------
+
+compileClasspath - Compile classpath for source set 'main'.
++--- project :libs:elasticsearch-core
++--- project :libs:elasticsearch-logging
++--- project :libs:elasticsearch-secure-sm
++--- project :libs:elasticsearch-x-content
+|    \--- project :libs:elasticsearch-core
++--- project :libs:elasticsearch-geo
++--- project :libs:elasticsearch-lz4
+|    +--- org.lz4:lz4-java:1.8.0
+|    \--- project :libs:elasticsearch-core
++--- org.apache.lucene:lucene-core:9.3.0
++--- org.apache.lucene:lucene-analysis-common:9.3.0
++--- org.apache.lucene:lucene-backward-codecs:9.3.0
++--- org.apache.lucene:lucene-grouping:9.3.0
++--- org.apache.lucene:lucene-highlighter:9.3.0
++--- org.apache.lucene:lucene-join:9.3.0
++--- org.apache.lucene:lucene-memory:9.3.0
++--- org.apache.lucene:lucene-misc:9.3.0
++--- org.apache.lucene:lucene-queries:9.3.0
++--- org.apache.lucene:lucene-queryparser:9.3.0
++--- org.apache.lucene:lucene-sandbox:9.3.0
++--- org.apache.lucene:lucene-suggest:9.3.0
++--- project :libs:elasticsearch-cli
+|    +--- net.sf.jopt-simple:jopt-simple:5.0.2
+|    \--- project :libs:elasticsearch-core
++--- com.tdunning:t-digest:3.2
++--- org.hdrhistogram:HdrHistogram:2.1.9
++--- org.apache.logging.log4j:log4j-api:2.18.0
++--- org.apache.logging.log4j:log4j-core:2.18.0
++--- net.java.dev.jna:jna:5.10.0
++--- co.elastic.logging:log4j2-ecs-layout:1.2.0
++--- co.elastic.logging:ecs-logging-core:1.2.0
++--- project :libs:elasticsearch-plugin-classloader
+\--- com.carrotsearch:hppc:0.8.1
+
+(*) - dependencies omitted (listed previously)
+
+A web-based, searchable dependency report is available by adding the --scan option.

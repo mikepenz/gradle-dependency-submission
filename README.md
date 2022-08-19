@@ -115,6 +115,7 @@ The following example showcases a gradle module in the root, without a module na
 | `gradle-build-module`    | Defines the module to retrieve the dependencies for. This is often `:app`. Defaults to ''.  |
 | `gradle-build-configuration`    | The configuration for which dependencies are resolved. Defaults to `debugCompileClasspath`. Plain java projects usually use `compileClasspath`. |
 | `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. If not provided, automatically resolved via gradle and the `module` config. |
+| `sub-module-mode`  | Defines how the action handles sub projects/modules. Possible options `IGNORE`, `COMBINED`, `INDIVIDUAL`. Default: `IGNORE`. |
 
 ## Sample 🖥️
 
