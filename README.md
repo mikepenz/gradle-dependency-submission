@@ -113,7 +113,7 @@ The following example showcases a gradle module in the root, without a module na
 | `use-gradlew`    | Defines if `./gradlew` or `gradle` cli will be used to retrieve the dependencies. Defaults to 'true' e.g. `./gradlew`.|
 | `gradle-project-path`    | Defines the path to the gradle project. Defaults to ''. |
 | `gradle-build-module`    | Defines the module to retrieve the dependencies for. This is often `:app`. Defaults to ''.  |
-| `gradle-build-configuration`    | The configuration for which dependencies are resolved. Defaults to `debugCompileClasspath`.  |
+| `gradle-build-configuration`    | The configuration for which dependencies are resolved. Defaults to `debugCompileClasspath`. Plain java projects usually use `compileClasspath`. |
 | `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. If not provided, automatically resolved via gradle and the `module` config. |
 
 ## Sample 🖥️

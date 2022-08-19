@@ -15,6 +15,19 @@ describe('processDependencyList', () => {
     expect(dependencies).toEqual(EXPECTED_GRADLE_DEPENDENCY_OUTPUT)
   })
 
+  test('run in gradle-example with invalid configuration', async () => {
+    try {
+      await processDependencyList(
+        true,
+        'gradle-example',
+        ':app',
+        'non-existing'
+      )
+    } catch (error: any) {
+      expect(error.message).toEqual("Failed to execute './gradlew :app:dependencies'")
+    }
+  })
+
   test('run in root', async () => {
     const dependencies = await processDependencyList(
       false,

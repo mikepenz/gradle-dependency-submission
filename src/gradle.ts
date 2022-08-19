@@ -18,7 +18,8 @@ async function fetchGradleVersion(useGradlew: boolean, gradleProjectPath: string
   const command = retrieveGradleCLI(useGradlew)
   const versionOutput = await exec.getExecOutput(command, ['--version'], {
     cwd: gradleProjectPath,
-    silent: !core.isDebug()
+    silent: !core.isDebug(),
+    ignoreReturnCode: true
   })
   if (versionOutput.exitCode !== 0) {
     core.error(versionOutput.stderr)
@@ -55,7 +56,8 @@ export async function retrieveGradleDependencies(
     [`${module}:dependencies`, '--configuration', gradleBuildConfiguration],
     {
       cwd: gradleProjectPath,
-      silent: !core.isDebug()
+      silent: !core.isDebug(),
+      ignoreReturnCode: true
     }
   )
   if (dependencyList.exitCode !== 0) {
@@ -113,7 +115,8 @@ async function retrieveGradleProperty(
 
   const propertyOutput = await exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
     cwd: gradleProjectPath,
-    silent: !core.isDebug()
+    silent: !core.isDebug(),
+    ignoreReturnCode: true
   })
   if (propertyOutput.exitCode !== 0) {
     core.error(propertyOutput.stderr)

@@ -65,7 +65,8 @@ function fetchGradleVersion(useGradlew, gradleProjectPath) {
         const command = retrieveGradleCLI(useGradlew);
         const versionOutput = yield exec.getExecOutput(command, ['--version'], {
             cwd: gradleProjectPath,
-            silent: !core.isDebug()
+            silent: !core.isDebug(),
+            ignoreReturnCode: true
         });
         if (versionOutput.exitCode !== 0) {
             core.error(versionOutput.stderr);
@@ -93,7 +94,8 @@ function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildMo
         const module = verifyModule(gradleBuildModule);
         const dependencyList = yield exec.getExecOutput(command, [`${module}:dependencies`, '--configuration', gradleBuildConfiguration], {
             cwd: gradleProjectPath,
-            silent: !core.isDebug()
+            silent: !core.isDebug(),
+            ignoreReturnCode: true
         });
         if (dependencyList.exitCode !== 0) {
             core.error(dependencyList.stderr);
@@ -136,7 +138,8 @@ function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule
         const module = verifyModule(gradleBuildModule);
         const propertyOutput = yield exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
             cwd: gradleProjectPath,
-            silent: !core.isDebug()
+            silent: !core.isDebug(),
+            ignoreReturnCode: true
         });
         if (propertyOutput.exitCode !== 0) {
             core.error(propertyOutput.stderr);
