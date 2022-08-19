@@ -36,6 +36,7 @@ export async function retrieveGradleDependencies(
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<string> {
+  const start = Date.now()
   const command = useGradlew ? './gradlew' : 'gradle'
   const dependencyList = await exec.getExecOutput(
     command,
@@ -50,6 +51,11 @@ export async function retrieveGradleDependencies(
     core.setFailed(`'${command} ${gradleBuildModule}:dependencies' resolution failed!`)
     throw new Error(`Failed to execute '${command} ${gradleBuildModule}:dependencies'`)
   }
+  core.info(
+    `Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${
+      Date.now() - start
+    }ms`
+  )
   return dependencyList.stdout
 }
 

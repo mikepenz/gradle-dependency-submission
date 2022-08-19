@@ -79,6 +79,7 @@ function fetchGradleVersion(useGradlew, gradleProjectPath) {
 exports.fetchGradleVersion = fetchGradleVersion;
 function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
+        const start = Date.now();
         const command = useGradlew ? './gradlew' : 'gradle';
         const dependencyList = yield exec.getExecOutput(command, [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration], {
             cwd: gradleProjectPath,
@@ -89,6 +90,7 @@ function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildMo
             core.setFailed(`'${command} ${gradleBuildModule}:dependencies' resolution failed!`);
             throw new Error(`Failed to execute '${command} ${gradleBuildModule}:dependencies'`);
         }
+        core.info(`Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${Date.now() - start}ms`);
         return dependencyList.stdout;
     });
 }
@@ -305,9 +307,12 @@ exports.parseGradlePackage = parseGradlePackage;
  */
 function parseGradleGraph(gradleBuildModule, contents) {
     var _a;
+    const start = Date.now();
     core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`);
     const pkgAssocList = [];
-    const linesIterator = new PeekingIterator(contents.split('\n').values());
+    const splitContent = contents.split('\n');
+    const linesIterator = new PeekingIterator(splitContent.values());
+    core.info(`Dependency output of ${splitContent.length} lines`);
     // iterate until the dependencies start!
     while (linesIterator.hasNext()) {
         if ((_a = linesIterator.peek()) === null || _a === void 0 ? void 0 : _a.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START)) {
@@ -319,6 +324,7 @@ function parseGradleGraph(gradleBuildModule, contents) {
     }
     // parse dependency tree
     parseGradleDependency(pkgAssocList, linesIterator, undefined, 0);
+    core.info(`Completed parsing ${pkgAssocList.length} dependency associations within ${Date.now() - start}ms`);
     core.endGroup();
     return pkgAssocList;
 }
@@ -463,6 +469,7 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
         }
         core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`);
         const manifest = new dependency_submission_toolkit_1.Manifest(path.dirname(dependencyPath), dependencyPath);
+        core.info(`Connection ${directDependencies.length} direct dependencies`);
         for (const pkgUrl of directDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);
             if (!dep) {
@@ -471,6 +478,7 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
             }
             manifest.addDirectDependency(dep);
         }
+        core.info(`Connection ${indirectDependencies.length} indirect dependencies`);
         for (const pkgUrl of indirectDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);
             if (!dep) {
