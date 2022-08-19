@@ -56,7 +56,10 @@ exports.singlePropertySupport = singlePropertySupport;
 function fetchGradleVersion(useGradlew, gradleProjectPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const command = useGradlew ? './gradlew' : 'gradle';
-        const versionOutput = yield exec.getExecOutput(command, ['--version'], { cwd: gradleProjectPath });
+        const versionOutput = yield exec.getExecOutput(command, ['--version'], {
+            cwd: gradleProjectPath,
+            silent: !core.isDebug()
+        });
         if (versionOutput.exitCode !== 0) {
             core.error(versionOutput.stderr);
             core.setFailed(`'${command} --version' command failed!`);
@@ -77,7 +80,10 @@ exports.fetchGradleVersion = fetchGradleVersion;
 function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
         const command = useGradlew ? './gradlew' : 'gradle';
-        const dependencyList = yield exec.getExecOutput(command, [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration], { cwd: gradleProjectPath });
+        const dependencyList = yield exec.getExecOutput(command, [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration], {
+            cwd: gradleProjectPath,
+            silent: !core.isDebug()
+        });
         if (dependencyList.exitCode !== 0) {
             core.error(dependencyList.stderr);
             core.setFailed(`'${command} ${gradleBuildModule}:dependencies' resolution failed!`);
@@ -106,7 +112,10 @@ function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule
             return undefined;
         }
         const command = useGradlew ? './gradlew' : 'gradle';
-        const propertyOutput = yield exec.getExecOutput(command, [`${gradleBuildModule}:properties`, '-q', '--property', property], { cwd: gradleProjectPath });
+        const propertyOutput = yield exec.getExecOutput(command, [`${gradleBuildModule}:properties`, '-q', '--property', property], {
+            cwd: gradleProjectPath,
+            silent: !core.isDebug()
+        });
         if (propertyOutput.exitCode !== 0) {
             core.error(propertyOutput.stderr);
             core.setFailed(`'${command} ${gradleBuildModule}:properties' retrieval failed!`);
@@ -453,7 +462,7 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
             dependencyPath = gradleDependencyPath;
         }
         core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`);
-        const manifest = new dependency_submission_toolkit_1.Manifest(path.dirname(dependencyPath), path.join(gradleProjectPath, dependencyPath));
+        const manifest = new dependency_submission_toolkit_1.Manifest(path.dirname(dependencyPath), dependencyPath);
         for (const pkgUrl of directDependencies) {
             const dep = packageCache.lookupPackage(pkgUrl);
             if (!dep) {

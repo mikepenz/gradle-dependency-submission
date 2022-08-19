@@ -34,7 +34,7 @@ export async function prepareDependencyManifest(
   }
 
   core.startGroup(`📦️ Preparing Dependency Snapshot - '${gradleBuildModule}'`)
-  const manifest = new Manifest(path.dirname(dependencyPath), path.join(gradleProjectPath, dependencyPath))
+  const manifest = new Manifest(path.dirname(dependencyPath), dependencyPath)
 
   for (const pkgUrl of directDependencies) {
     const dep = packageCache.lookupPackage(pkgUrl)

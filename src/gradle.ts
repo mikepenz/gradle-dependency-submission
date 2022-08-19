@@ -9,7 +9,10 @@ export async function singlePropertySupport(useGradlew: boolean, gradleProjectPa
 
 export async function fetchGradleVersion(useGradlew: boolean, gradleProjectPath: string): Promise<string> {
   const command = useGradlew ? './gradlew' : 'gradle'
-  const versionOutput = await exec.getExecOutput(command, ['--version'], {cwd: gradleProjectPath})
+  const versionOutput = await exec.getExecOutput(command, ['--version'], {
+    cwd: gradleProjectPath,
+    silent: !core.isDebug()
+  })
   if (versionOutput.exitCode !== 0) {
     core.error(versionOutput.stderr)
     core.setFailed(`'${command} --version' command failed!`)
@@ -37,7 +40,10 @@ export async function retrieveGradleDependencies(
   const dependencyList = await exec.getExecOutput(
     command,
     [`${gradleBuildModule}:dependencies`, '--configuration', gradleBuildConfiguration],
-    {cwd: gradleProjectPath}
+    {
+      cwd: gradleProjectPath,
+      silent: !core.isDebug()
+    }
   )
   if (dependencyList.exitCode !== 0) {
     core.error(dependencyList.stderr)
@@ -78,7 +84,10 @@ async function retrieveGradleProperty(
   const propertyOutput = await exec.getExecOutput(
     command,
     [`${gradleBuildModule}:properties`, '-q', '--property', property],
-    {cwd: gradleProjectPath}
+    {
+      cwd: gradleProjectPath,
+      silent: !core.isDebug()
+    }
   )
   if (propertyOutput.exitCode !== 0) {
     core.error(propertyOutput.stderr)
