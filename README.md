@@ -117,6 +117,13 @@ The following example showcases a gradle module in the root, without a module na
 | `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. If not provided, automatically resolved via gradle and the `module` config. |
 | `sub-module-mode`  | Defines how the action handles sub projects/modules. Possible options `IGNORE`, `COMBINED`, `INDIVIDUAL`. Default: `IGNORE`. |
 
+| **sub-module-mode**      |    **Description**           |
+| ----- | ---- |
+| `IGNORE`      | Ignores sub projects/modules and skips over their dependencies. Only the core module is being imported. |
+| `COMBINED`    | Combines and flattens the sub dependencies, and attaches them to the root of the parent module. |
+| `INDIVIDUAL`  | Handles every single module as its own `Manifest` in the dependency submission API. Uses the gradle API to retrieve the module paths, and imports them individually. |
+
+
 ## Sample 🖥️
 
 [Snapshot dependencies](https://github.com/mikepenz/gradle-dependency-submission/network/dependencies)
