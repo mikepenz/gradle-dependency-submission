@@ -517,7 +517,7 @@ function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gr
 exports.processGradleGraph = processGradleGraph;
 function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.startGroup(`🔨 Processing gradle dependencies for module -'${gradleBuildModule}'`);
+        core.startGroup(`🔨 Processing gradle dependencies for module - '${gradleBuildModule}'`);
         const dependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         core.endGroup();
         return (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList);

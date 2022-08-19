@@ -43,7 +43,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./
         with:
-          gradle-project-path: "gradle-example"
-          gradle-dependency-path: "app/build.gradle"
-          gradle-build-module: ":app"
-          gradle-build-configuration: "debugCompileClasspath"
+          gradle-project-path: |-
+            gradle-example
+          gradle-build-module: |-
+            :app
+            :simple-app
+          gradle-build-configuration: |-
+            debugCompileClasspath

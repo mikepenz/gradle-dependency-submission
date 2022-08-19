@@ -110,7 +110,7 @@ export async function processDependencyList(
   gradleBuildModule: string,
   gradleBuildConfiguration: string
 ): Promise<[PackageURL, PackageURL | undefined][]> {
-  core.startGroup(`🔨 Processing gradle dependencies for module -'${gradleBuildModule}'`)
+  core.startGroup(`🔨 Processing gradle dependencies for module - '${gradleBuildModule}'`)
   const dependencyList = await retrieveGradleDependencies(
     useGradlew,
     gradleProjectPath,
