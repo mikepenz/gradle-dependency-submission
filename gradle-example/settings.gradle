@@ -17,3 +17,9 @@ rootProject.name = "Gradle Example"
 
 include ':app'
 include ':simple-app'
+
+
+include ':library-parent-parent'
+include ':library-parent'
+include ':library-child-1'
+include ':library-child-2'

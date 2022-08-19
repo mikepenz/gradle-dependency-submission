@@ -3,12 +3,24 @@ import * as core from '@actions/core'
 
 const DEPENDENCY_DEPENDENCY_LEVEL_START = '+--- '
 const DEPENDENCY_DEPENDENCY_LEVEL_END = '\\--- '
-const DEPENDENCY_PROJECT_START = `${DEPENDENCY_DEPENDENCY_LEVEL_START}project`
+const DEPENDENCY_PROJECT = `project `
+const DEPENDENCY_PROJECT_START = `${DEPENDENCY_DEPENDENCY_LEVEL_START}${DEPENDENCY_PROJECT}`
+const DEPENDENCY_PROJECT_END = `${DEPENDENCY_DEPENDENCY_LEVEL_END}${DEPENDENCY_PROJECT}`
 const DEPENDENCY_CHILD_INSET = ['|    ', '     ']
 const DEPENDENCY_CONSTRAINT = ' (c)'
 const DEPENDENCY_OMITTED = ' (*)'
 const DEPENDENCY_LEVEL_INLINE = 5
 
+export function parseProjectSpecification(projectString: string, level = 0): Project {
+  const stripped = projectString.substring((level + 1) * DEPENDENCY_LEVEL_INLINE + DEPENDENCY_PROJECT.length).trimEnd()
+  const project = stripped.split(' ')[0]
+  return new Project(project)
+}
+/**
+ * Parses a gradle package specification, given the single line and current level.
+ *
+ * Identifies variant of specification (full maven spec or without version (if bom file is used)).
+ */
 export function parseGradlePackage(pkg: string, level = 0): PackageURL {
   const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd()
   const split = stripped.split(':')
@@ -47,14 +59,17 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
 }
 
 /**
- * parseGoModGraph parses an *associative list* of Go packages into tuples into
- * an associative list of PackageURLs. This expects the output of 'go mod
- * graph' as input
+ * `parseGradleGraph` takes in the current module and dependency output and parses through the full `dependency` output.
  */
-export function parseGradleGraph(gradleBuildModule: string, contents: string): [PackageURL, PackageURL | undefined][] {
+export function parseGradleGraph(
+  gradleBuildModule: string,
+  contents: string,
+  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE' = 'IGNORE'
+): RootProject {
   const start = Date.now()
   core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`)
-  const pkgAssocList: [PackageURL, PackageURL | undefined][] = []
+
+  const rootProject = new RootProject(gradleBuildModule)
   const splitContent = contents.split('\n')
   const linesIterator = new PeekingIterator(splitContent.values())
   core.info(`Dependency output of ${splitContent.length} lines`)
@@ -68,18 +83,24 @@ export function parseGradleGraph(gradleBuildModule: string, contents: string): [
       linesIterator.next()
     }
   }
+
   // parse dependency tree
-  parseGradleDependency(pkgAssocList, linesIterator, undefined, 0)
-  core.info(`Completed parsing ${pkgAssocList.length} dependency associations within ${Date.now() - start}ms`)
+  parseGradleDependency(rootProject, rootProject, linesIterator, undefined, 0, subModuleMode)
+  core.info(`Completed parsing ${rootProject.packages.length} dependency associations within ${Date.now() - start}ms`)
   core.endGroup()
-  return pkgAssocList
+  return rootProject
 }
 
-export function parseGradleDependency(
-  pkgAssocList: [PackageURL, PackageURL | undefined][],
+/**
+ *
+ */
+function parseGradleDependency(
+  rootProject: RootProject,
+  project: Project,
   iterator: PeekingIterator<string>,
   parentParent: PackageURL | undefined,
-  level = 0
+  level = 0,
+  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE'
 ): void {
   // check if we are either at the end, or if we are not within a sub dependency
   let peekedLine = iterator.peek()?.trimEnd() // don't trim start (or it could kick away child insets)
@@ -103,10 +124,16 @@ export function parseGradleDependency(
     }
     const strippedLine = line.substring(level * DEPENDENCY_LEVEL_INLINE)
 
-    if (line.startsWith(DEPENDENCY_PROJECT_START)) {
-      core.info(`Found a project dependency, skipping (Currently not supported) - ${line}`)
-      iterator.next() // consume the next item
-      continue
+    if (strippedLine.startsWith(DEPENDENCY_PROJECT_START) || strippedLine.startsWith(DEPENDENCY_PROJECT_END)) {
+      iterator.next() // consume this line describing the project
+      if (subModuleMode === 'IGNORE') {
+        core.info(`Found a project dependency, skipping (Currently not supported) - ${line}`)
+      } else {
+        const childProject = rootProject.getOrRegisterProject(parseProjectSpecification(line, level)) // register new child project with root
+        parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode)
+        project.childProjects.push(childProject) // register child project with parent project to retain hierarchy
+        core.info(`Found a child project dependency: ${childProject.name}`)
+      }
     } else if (
       strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_START) ||
       strippedLine.startsWith(DEPENDENCY_DEPENDENCY_LEVEL_END)
@@ -118,11 +145,11 @@ export function parseGradleDependency(
 
       const parent = parseGradlePackage(line, level)
       if (parentParent) {
-        pkgAssocList.push([parentParent, parent])
+        project.packages.push([parentParent, parent])
       }
-      parseGradleDependency(pkgAssocList, iterator, parent, level + 1)
-      if (level === 0) {
-        pkgAssocList.push([parent, undefined])
+      parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode)
+      if (level === 0 || !parentParent) {
+        project.packages.push([parent, undefined])
       }
     } else if (
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
@@ -136,6 +163,35 @@ export function parseGradleDependency(
       continue
     } else {
       break
+    }
+  }
+}
+
+export class Project {
+  name: string
+  dependencyPath: string | undefined = undefined
+  childProjects: Project[] = []
+  packages: [PackageURL, PackageURL | undefined][] = []
+
+  constructor(name: string) {
+    this.name = name
+  }
+}
+
+export class RootProject extends Project {
+  projectRegistry: Project[] = []
+
+  /**
+   * Registers the given project. If not yet existing.
+   * Returns existing instance otherwise
+   */
+  getOrRegisterProject(project: Project): Project {
+    const exists = this.projectRegistry.find(item => item.name === project.name)
+    if (!exists) {
+      this.projectRegistry.push(project)
+      return project
+    } else {
+      return exists
     }
   }
 }

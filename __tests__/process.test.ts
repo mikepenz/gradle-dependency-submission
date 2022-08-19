@@ -1,16 +1,19 @@
 import {jest, describe, test, expect} from '@jest/globals'
-import {processDependencyList} from '../src/process'
+import {prepareDependencyManifest, processDependencyList} from '../src/process'
 
 jest.setTimeout(240000)
 
 describe('processDependencyList', () => {
+  process.env['GITHUB_WORKSPACE'] = '.'
   test('run in gradle-example', async () => {
-    const dependencies = await processDependencyList(
+    const project = await processDependencyList(
       true,
       'gradle-example',
       ':app',
-      'debugCompileClasspath'
+      'debugCompileClasspath',
+      'IGNORE'
     )
+    const dependencies = project.packages
     expect(dependencies).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(EXPECTED_GRADLE_DEPENDENCY_OUTPUT)
   })
@@ -21,7 +24,8 @@ describe('processDependencyList', () => {
         true,
         'gradle-example',
         ':app',
-        'non-existing'
+        'non-existing',
+        'IGNORE'
       )
     } catch (error: any) {
       expect(error.message).toEqual("Failed to execute './gradlew :app:dependencies'")
@@ -29,14 +33,55 @@ describe('processDependencyList', () => {
   })
 
   test('run in root', async () => {
-    const dependencies = await processDependencyList(
+    const project = await processDependencyList(
       false,
       '',
       ':',
-      'compileClasspath'
+      'compileClasspath',
+      'IGNORE'
     )
+    const dependencies = project.packages
     expect(dependencies).toHaveLength(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT)
+  })
+
+  test('run in gradle-example with nested modules - IGNORE', async () => {
+    const manifests = await prepareDependencyManifest(
+      true,
+      'gradle-example',
+      ':library-parent-parent',
+      'debugCompileClasspath',
+      undefined,
+      'IGNORE'
+    )
+    expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_IGNORE.length)
+    expect(manifests).toEqual(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_IGNORE)
+  })
+
+  test('run in gradle-example with nested modules - COMBINED', async () => {
+    const manifests = await prepareDependencyManifest(
+      true,
+      'gradle-example',
+      ':library-parent-parent',
+      'debugCompileClasspath',
+      undefined,
+      'COMBINED'
+    )
+    expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED.length)
+    expect(manifests).toEqual(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED)
+  })
+
+  test('run in gradle-example with nested modules - INDIVIDUAL', async () => {
+    const manifests = await prepareDependencyManifest(
+      true,
+      'gradle-example',
+      ':library-parent-parent',
+      'debugCompileClasspath',
+      undefined,
+      'INDIVIDUAL'
+    )
+    expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL.length)
+    expect(manifests).toEqual(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL)
   })
 })
 
@@ -2350,4 +2395,2301 @@ const EXPECTED_GRADLE_DEPENDENCY_OUTPUT = [
     },
     undefined,
   ],
+]
+
+const EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_IGNORE = [
+  {
+    resolved: {
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk8@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-jdk8",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+    },
+    name: "gradle-example/library-parent-parent",
+    file: {
+      source_location: "gradle-example/library-parent-parent/build.gradle",
+    },
+  },
+]
+
+const EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED = [
+  {
+    resolved: {
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk8@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-jdk8",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "annotations",
+                    namespace: "org.jetbrains",
+                    version: "13.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-jdk7",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.retrofit2/retrofit@2.9.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "retrofit",
+            namespace: "com.squareup.retrofit2",
+            version: "2.9.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okhttp",
+                namespace: "com.squareup.okhttp3",
+                version: "4.10.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "okio",
+                    namespace: "com.squareup.okio",
+                    version: "3.0.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "okio-jvm",
+                        namespace: "com.squareup.okio",
+                        version: "3.0.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-jdk8",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib-common",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "annotations",
+                                    namespace: "org.jetbrains",
+                                    version: "13.0",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib-jdk7",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                    {
+                                      packageURL: {
+                                        type: "maven",
+                                        name: "kotlin-stdlib-common",
+                                        namespace: "org.jetbrains.kotlin",
+                                        version: "1.7.10",
+                                        qualifiers: null,
+                                        subpath: null,
+                                      },
+                                      dependencies: [
+                                      ],
+                                    },
+                                    {
+                                      packageURL: {
+                                        type: "maven",
+                                        name: "annotations",
+                                        namespace: "org.jetbrains",
+                                        version: "13.0",
+                                        qualifiers: null,
+                                        subpath: null,
+                                      },
+                                      dependencies: [
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okhttp3/okhttp@4.10.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "okhttp",
+            namespace: "com.squareup.okhttp3",
+            version: "4.10.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okio",
+                namespace: "com.squareup.okio",
+                version: "3.0.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "okio-jvm",
+                    namespace: "com.squareup.okio",
+                    version: "3.0.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-jdk8",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib-common",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "annotations",
+                                namespace: "org.jetbrains",
+                                version: "13.0",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-jdk7",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib-common",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "annotations",
+                                    namespace: "org.jetbrains",
+                                    version: "13.0",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "annotations",
+                    namespace: "org.jetbrains",
+                    version: "13.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okhttp3/logging-interceptor@4.10.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "logging-interceptor",
+            namespace: "com.squareup.okhttp3",
+            version: "4.10.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okhttp",
+                namespace: "com.squareup.okhttp3",
+                version: "4.10.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "okio",
+                    namespace: "com.squareup.okio",
+                    version: "3.0.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "okio-jvm",
+                        namespace: "com.squareup.okio",
+                        version: "3.0.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-jdk8",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib-common",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "annotations",
+                                    namespace: "org.jetbrains",
+                                    version: "13.0",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib-jdk7",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                    {
+                                      packageURL: {
+                                        type: "maven",
+                                        name: "kotlin-stdlib-common",
+                                        namespace: "org.jetbrains.kotlin",
+                                        version: "1.7.10",
+                                        qualifiers: null,
+                                        subpath: null,
+                                      },
+                                      dependencies: [
+                                      ],
+                                    },
+                                    {
+                                      packageURL: {
+                                        type: "maven",
+                                        name: "annotations",
+                                        namespace: "org.jetbrains",
+                                        version: "13.0",
+                                        qualifiers: null,
+                                        subpath: null,
+                                      },
+                                      dependencies: [
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-jdk8",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-jdk7",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "annotations",
+                            namespace: "org.jetbrains",
+                            version: "13.0",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/org.json/json@20220320": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "json",
+            namespace: "org.json",
+            version: "20220320",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okio/okio@3.0.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "okio",
+            namespace: "com.squareup.okio",
+            version: "3.0.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okio-jvm",
+                namespace: "com.squareup.okio",
+                version: "3.0.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-jdk8",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "annotations",
+                            namespace: "org.jetbrains",
+                            version: "13.0",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-jdk7",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib-common",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "annotations",
+                                namespace: "org.jetbrains",
+                                version: "13.0",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okio/okio-jvm@3.0.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "okio-jvm",
+            namespace: "com.squareup.okio",
+            version: "3.0.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-jdk8",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-jdk7",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "annotations",
+                            namespace: "org.jetbrains",
+                            version: "13.0",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-common",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-common",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "annotations",
+                namespace: "org.jetbrains",
+                version: "13.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-common@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-common",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains/annotations@13.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "annotations",
+            namespace: "org.jetbrains",
+            version: "13.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk7@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-jdk7",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "annotations",
+                    namespace: "org.jetbrains",
+                    version: "13.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+    },
+    name: "gradle-example/library-parent-parent",
+    file: {
+      source_location: "gradle-example/library-parent-parent/build.gradle",
+    },
+  },
+]
+
+const EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL = [
+  {
+    resolved: {
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk8@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-jdk8",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+    },
+    name: "gradle-example/library-parent-parent",
+    file: {
+      source_location: "gradle-example/library-parent-parent/build.gradle",
+    },
+  },
+  {
+    resolved: {
+      "pkg:maven/com.squareup.retrofit2/retrofit@2.9.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "retrofit",
+            namespace: "com.squareup.retrofit2",
+            version: "2.9.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okhttp",
+                namespace: "com.squareup.okhttp3",
+                version: "4.10.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk8@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-jdk8",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okhttp3/okhttp@4.10.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "okhttp",
+            namespace: "com.squareup.okhttp3",
+            version: "4.10.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+    },
+    name: "gradle-example/library-parent",
+    file: {
+      source_location: "gradle-example/library-parent/build.gradle",
+    },
+  },
+  {
+    resolved: {
+      "pkg:maven/com.squareup.okhttp3/okhttp@4.10.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "okhttp",
+            namespace: "com.squareup.okhttp3",
+            version: "4.10.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okio",
+                namespace: "com.squareup.okio",
+                version: "3.0.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "okio-jvm",
+                    namespace: "com.squareup.okio",
+                    version: "3.0.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-jdk8",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib-common",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "annotations",
+                                namespace: "org.jetbrains",
+                                version: "13.0",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-jdk7",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib-common",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "annotations",
+                                    namespace: "org.jetbrains",
+                                    version: "13.0",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "annotations",
+                    namespace: "org.jetbrains",
+                    version: "13.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okhttp3/logging-interceptor@4.10.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "logging-interceptor",
+            namespace: "com.squareup.okhttp3",
+            version: "4.10.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okhttp",
+                namespace: "com.squareup.okhttp3",
+                version: "4.10.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "okio",
+                    namespace: "com.squareup.okio",
+                    version: "3.0.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "okio-jvm",
+                        namespace: "com.squareup.okio",
+                        version: "3.0.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-jdk8",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib-common",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "annotations",
+                                    namespace: "org.jetbrains",
+                                    version: "13.0",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                  ],
+                                },
+                              ],
+                            },
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib-jdk7",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                                {
+                                  packageURL: {
+                                    type: "maven",
+                                    name: "kotlin-stdlib",
+                                    namespace: "org.jetbrains.kotlin",
+                                    version: "1.7.10",
+                                    qualifiers: null,
+                                    subpath: null,
+                                  },
+                                  dependencies: [
+                                    {
+                                      packageURL: {
+                                        type: "maven",
+                                        name: "kotlin-stdlib-common",
+                                        namespace: "org.jetbrains.kotlin",
+                                        version: "1.7.10",
+                                        qualifiers: null,
+                                        subpath: null,
+                                      },
+                                      dependencies: [
+                                      ],
+                                    },
+                                    {
+                                      packageURL: {
+                                        type: "maven",
+                                        name: "annotations",
+                                        namespace: "org.jetbrains",
+                                        version: "13.0",
+                                        qualifiers: null,
+                                        subpath: null,
+                                      },
+                                      dependencies: [
+                                      ],
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-jdk8",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-jdk7",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "annotations",
+                            namespace: "org.jetbrains",
+                            version: "13.0",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk8@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-jdk8",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "annotations",
+                    namespace: "org.jetbrains",
+                    version: "13.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-jdk7",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okio/okio@3.0.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "okio",
+            namespace: "com.squareup.okio",
+            version: "3.0.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "okio-jvm",
+                namespace: "com.squareup.okio",
+                version: "3.0.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-jdk8",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "annotations",
+                            namespace: "org.jetbrains",
+                            version: "13.0",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-jdk7",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "kotlin-stdlib-common",
+                                namespace: "org.jetbrains.kotlin",
+                                version: "1.7.10",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                            {
+                              packageURL: {
+                                type: "maven",
+                                name: "annotations",
+                                namespace: "org.jetbrains",
+                                version: "13.0",
+                                qualifiers: null,
+                                subpath: null,
+                              },
+                              dependencies: [
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/com.squareup.okio/okio-jvm@3.0.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "okio-jvm",
+            namespace: "com.squareup.okio",
+            version: "3.0.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-jdk8",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib-common",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "annotations",
+                        namespace: "org.jetbrains",
+                        version: "13.0",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                      ],
+                    },
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-jdk7",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                    {
+                      packageURL: {
+                        type: "maven",
+                        name: "kotlin-stdlib",
+                        namespace: "org.jetbrains.kotlin",
+                        version: "1.7.10",
+                        qualifiers: null,
+                        subpath: null,
+                      },
+                      dependencies: [
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "kotlin-stdlib-common",
+                            namespace: "org.jetbrains.kotlin",
+                            version: "1.7.10",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                        {
+                          packageURL: {
+                            type: "maven",
+                            name: "annotations",
+                            namespace: "org.jetbrains",
+                            version: "13.0",
+                            qualifiers: null,
+                            subpath: null,
+                          },
+                          dependencies: [
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-common",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib-common",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+              ],
+            },
+            {
+              packageURL: {
+                type: "maven",
+                name: "annotations",
+                namespace: "org.jetbrains",
+                version: "13.0",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-common@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-common",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains/annotations@13.0": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "annotations",
+            namespace: "org.jetbrains",
+            version: "13.0",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+      "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib-jdk7@1.7.10": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "kotlin-stdlib-jdk7",
+            namespace: "org.jetbrains.kotlin",
+            version: "1.7.10",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+            {
+              packageURL: {
+                type: "maven",
+                name: "kotlin-stdlib",
+                namespace: "org.jetbrains.kotlin",
+                version: "1.7.10",
+                qualifiers: null,
+                subpath: null,
+              },
+              dependencies: [
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "kotlin-stdlib-common",
+                    namespace: "org.jetbrains.kotlin",
+                    version: "1.7.10",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+                {
+                  packageURL: {
+                    type: "maven",
+                    name: "annotations",
+                    namespace: "org.jetbrains",
+                    version: "13.0",
+                    qualifiers: null,
+                    subpath: null,
+                  },
+                  dependencies: [
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        relationship: "indirect",
+        scope: undefined,
+      },
+    },
+    name: "gradle-example/library-child-1",
+    file: {
+      source_location: "gradle-example/library-child-1/build.gradle",
+    },
+  },
+  {
+    resolved: {
+      "pkg:maven/org.json/json@20220320": {
+        depPackage: {
+          packageURL: {
+            type: "maven",
+            name: "json",
+            namespace: "org.json",
+            version: "20220320",
+            qualifiers: null,
+            subpath: null,
+          },
+          dependencies: [
+          ],
+        },
+        relationship: "direct",
+        scope: undefined,
+      },
+    },
+    name: "gradle-example/library-child-2",
+    file: {
+      source_location: "gradle-example/library-child-2/build.gradle",
+    },
+  },
 ]

@@ -1,0 +1,18 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    compileSdk 32
+    defaultConfig {
+        minSdk 29
+        targetSdk 32
+        versionCode 1
+        versionName "1.0"
+    }
+}
+
+dependencies {
+    api project(":library-parent")
+}

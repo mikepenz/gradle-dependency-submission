@@ -10,6 +10,20 @@ async function run(): Promise<void> {
   const gradleBuildModule = core.getMultilineInput('gradle-build-module')
   const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration')
   const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path')
+  let subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE'
+  const subModuleModeInput = core.getInput('sub-module-mode')
+
+  // ensure provided subModuleMode is one of the supported types
+  if (subModuleModeInput === 'INDIVIDUAL') {
+    subModuleMode = 'INDIVIDUAL'
+  } else if (subModuleModeInput === 'COMBINED') {
+    subModuleMode = 'COMBINED'
+  } else if (subModuleModeInput === 'IGNORE') {
+    subModuleMode = 'IGNORE'
+  } else {
+    core.warning(`🚨 Unknown sub-module mode: ${subModuleModeInput}`)
+    subModuleMode = 'IGNORE'
+  }
 
   if (gradleProjectPath.length === 0) {
     core.debug(`No 'gradle-project-path' passed, using 'root'`)
@@ -32,17 +46,16 @@ async function run(): Promise<void> {
   core.endGroup()
 
   const manifests: Manifest[] = []
-
   for (let i = 0; i < length; i++) {
-    manifests.push(
-      await prepareDependencyManifest(
-        useGradlew,
-        gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i],
-        gradleBuildModule[i],
-        gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i],
-        gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined
-      )
+    const subManifests = await prepareDependencyManifest(
+      useGradlew,
+      gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i],
+      gradleBuildModule[i],
+      gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i],
+      gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined,
+      subModuleMode
     )
+    manifests.push(...subManifests)
   }
 
   const snapshot = new Snapshot(

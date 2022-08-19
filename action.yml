@@ -28,6 +28,10 @@ inputs:
   gradle-dependency-path:
     required: false
     description: 'Path to the file containing the dependency specification. Relative to the provided project-path. By default it will retrieve this via gradle.'
+  sub-module-mode:
+    required: false
+    description: 'Defines how the action handles submodules (sub projects). "IGNORE", "COMBINED", "INDIVIDUAL". Default: "IGNORE"'
+    default: 'IGNORE'
 runs:
   using: 'node16'
   main: 'dist/index.js'
