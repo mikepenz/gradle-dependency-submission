@@ -53,7 +53,19 @@ const semver_1 = __importDefault(__nccwpck_require__(1383));
 function singlePropertySupport(useGradlew, gradleProjectPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const version = yield fetchGradleVersion(useGradlew, gradleProjectPath);
-        return semver_1.default.satisfies(version, '>=7.5.0');
+        const semverVersion = semver_1.default.parse(version);
+        if (semverVersion) {
+            if (semver_1.default.satisfies(semverVersion, '>=7.5.0')) {
+                return true;
+            }
+            else {
+                core.warning(`The current gradle version does not support retrieving a single property. Found version: ${version}. At least required: 7.5.0`);
+                return false;
+            }
+        }
+        else {
+            throw new Error(`Failed to parse gradle version: ${version}`);
+        }
     });
 }
 exports.singlePropertySupport = singlePropertySupport;
@@ -130,8 +142,7 @@ exports.retrieveGradleProjectName = retrieveGradleProjectName;
  */
 function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, property) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!singlePropertySupport(useGradlew, gradleProjectPath)) {
-            core.warning(`The current gradle version does not support retrieving a single property. Skipping retrieval of ${property} for ${gradleBuildModule}`);
+        if (!(yield singlePropertySupport(useGradlew, gradleProjectPath))) {
             return undefined;
         }
         const command = retrieveGradleCLI(useGradlew);
