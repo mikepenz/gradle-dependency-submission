@@ -8,7 +8,19 @@ import semver from 'semver'
  */
 export async function singlePropertySupport(useGradlew: boolean, gradleProjectPath: string): Promise<boolean> {
   const version = await fetchGradleVersion(useGradlew, gradleProjectPath)
-  return semver.satisfies(version, '>=7.5.0')
+  const semverVersion = semver.parse(version)
+  if (semverVersion) {
+    if (semver.satisfies(semverVersion, '>=7.5.0')) {
+      return true
+    } else {
+      core.warning(
+        `The current gradle version does not support retrieving a single property. Found version: ${version}. At least required: 7.5.0`
+      )
+      return false
+    }
+  } else {
+    throw new Error(`Failed to parse gradle version: ${version}`)
+  }
 }
 
 /**
@@ -103,10 +115,7 @@ async function retrieveGradleProperty(
   gradleBuildModule: string,
   property: string
 ): Promise<string | undefined> {
-  if (!singlePropertySupport(useGradlew, gradleProjectPath)) {
-    core.warning(
-      `The current gradle version does not support retrieving a single property. Skipping retrieval of ${property} for ${gradleBuildModule}`
-    )
+  if (!(await singlePropertySupport(useGradlew, gradleProjectPath))) {
     return undefined
   }
 
