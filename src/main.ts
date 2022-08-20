@@ -10,12 +10,14 @@ async function run(): Promise<void> {
   const gradleBuildModule = core.getMultilineInput('gradle-build-module')
   const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration')
   const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path')
-  let subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE'
+  let subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
   const subModuleModeInput = core.getInput('sub-module-mode')
 
   // ensure provided subModuleMode is one of the supported types
   if (subModuleModeInput === 'INDIVIDUAL') {
     subModuleMode = 'INDIVIDUAL'
+  } else if (subModuleModeInput === 'INDIVIDUAL_DEEP') {
+    subModuleMode = 'INDIVIDUAL_DEEP'
   } else if (subModuleModeInput === 'COMBINED') {
     subModuleMode = 'COMBINED'
   } else if (subModuleModeInput === 'IGNORE') {

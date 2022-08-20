@@ -243,6 +243,9 @@ function run() {
         if (subModuleModeInput === 'INDIVIDUAL') {
             subModuleMode = 'INDIVIDUAL';
         }
+        else if (subModuleModeInput === 'INDIVIDUAL_DEEP') {
+            subModuleMode = 'INDIVIDUAL_DEEP';
+        }
         else if (subModuleModeInput === 'COMBINED') {
             subModuleMode = 'COMBINED';
         }
@@ -634,7 +637,7 @@ function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gr
         rootProject.dependencyPath = gradleDependencyPath;
         const flattenedProjects = [];
         flattenedProjects.push(rootProject);
-        if (subModuleMode === 'INDIVIDUAL') {
+        if (subModuleMode === 'INDIVIDUAL' || subModuleMode === 'INDIVIDUAL_DEEP') {
             // construct flattened projects array
             flattenedProjects.push(...rootProject.projectRegistry);
         }
@@ -696,12 +699,14 @@ function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule,
         const dependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         core.endGroup();
         const rootProject = (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode);
-        for (const project of rootProject.projectRegistry) {
-            core.startGroup(`🔨 Processing gradle dependencies for sub module - '${gradleBuildModule}'`);
-            const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, gradleBuildConfiguration);
-            const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT');
-            project.packages.push(...subProject.packages);
-            core.endGroup();
+        if (subModuleMode === 'INDIVIDUAL_DEEP') {
+            for (const project of rootProject.projectRegistry) {
+                core.startGroup(`🔨 Processing gradle dependencies for sub module - '${gradleBuildModule}'`);
+                const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, gradleBuildConfiguration);
+                const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT');
+                project.packages.push(...subProject.packages);
+                core.endGroup();
+            }
         }
         return rootProject;
     });

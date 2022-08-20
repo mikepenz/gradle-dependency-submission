@@ -64,7 +64,7 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
 export function parseGradleGraph(
   gradleBuildModule: string,
   contents: string,
-  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT' = 'IGNORE'
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT' = 'IGNORE'
 ): RootProject {
   const start = Date.now()
   core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`)
@@ -100,7 +100,7 @@ function parseGradleDependency(
   iterator: PeekingIterator<string>,
   parentParent: PackageURL | undefined,
   level = 0,
-  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT'
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT'
 ): void {
   // check if we are either at the end, or if we are not within a sub dependency
   let peekedLine = iterator.peek()?.trimEnd() // don't trim start (or it could kick away child insets)
