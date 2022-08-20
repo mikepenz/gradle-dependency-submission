@@ -64,7 +64,7 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
 export function parseGradleGraph(
   gradleBuildModule: string,
   contents: string,
-  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE' = 'IGNORE'
+  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT' = 'IGNORE'
 ): RootProject {
   const start = Date.now()
   core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`)
@@ -100,7 +100,7 @@ function parseGradleDependency(
   iterator: PeekingIterator<string>,
   parentParent: PackageURL | undefined,
   level = 0,
-  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE'
+  subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT'
 ): void {
   // check if we are either at the end, or if we are not within a sub dependency
   let peekedLine = iterator.peek()?.trimEnd() // don't trim start (or it could kick away child insets)
@@ -128,6 +128,8 @@ function parseGradleDependency(
       iterator.next() // consume this line describing the project
       if (subModuleMode === 'IGNORE') {
         core.info(`Found a project dependency, skipping (Currently not supported) - ${line}`)
+      } else if (subModuleMode === 'IGNORE_SILENT') {
+        core.debug(`Found a project dependency, skipping (Currently not supported) - ${line}`)
       } else {
         const childProject = rootProject.getOrRegisterProject(parseProjectSpecification(line, level)) // register new child project with root
         parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode)

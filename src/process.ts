@@ -158,7 +158,7 @@ export async function processDependencyList(
   gradleBuildConfiguration: string,
   subModuleMode: 'INDIVIDUAL' | 'COMBINED' | 'IGNORE'
 ): Promise<RootProject> {
-  core.startGroup(`🔨 Processing gradle dependencies for module - '${gradleBuildModule}'`)
+  core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`)
   const dependencyList = await retrieveGradleDependencies(
     useGradlew,
     gradleProjectPath,
@@ -166,7 +166,22 @@ export async function processDependencyList(
     gradleBuildConfiguration
   )
   core.endGroup()
-  return parseGradleGraph(gradleBuildModule, dependencyList, subModuleMode)
+  const rootProject = parseGradleGraph(gradleBuildModule, dependencyList, subModuleMode)
+
+  for (const project of rootProject.projectRegistry) {
+    core.startGroup(`🔨 Processing gradle dependencies for sub module - '${gradleBuildModule}'`)
+    const subDependencyList = await retrieveGradleDependencies(
+      useGradlew,
+      gradleProjectPath,
+      project.name,
+      gradleBuildConfiguration
+    )
+    const subProject = parseGradleGraph(project.name, subDependencyList, 'IGNORE_SILENT')
+    project.packages.push(...subProject.packages)
+    core.endGroup()
+  }
+
+  return rootProject
 }
 
 interface Result {

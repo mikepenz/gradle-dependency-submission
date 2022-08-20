@@ -439,6 +439,9 @@ function parseGradleDependency(rootProject, project, iterator, parentParent, lev
             if (subModuleMode === 'IGNORE') {
                 core.info(`Found a project dependency, skipping (Currently not supported) - ${line}`);
             }
+            else if (subModuleMode === 'IGNORE_SILENT') {
+                core.debug(`Found a project dependency, skipping (Currently not supported) - ${line}`);
+            }
             else {
                 const childProject = rootProject.getOrRegisterProject(parseProjectSpecification(line, level)); // register new child project with root
                 parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode);
@@ -689,10 +692,18 @@ function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gr
 exports.processGradleGraph = processGradleGraph;
 function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.startGroup(`🔨 Processing gradle dependencies for module - '${gradleBuildModule}'`);
+        core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`);
         const dependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
         core.endGroup();
-        return (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode);
+        const rootProject = (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode);
+        for (const project of rootProject.projectRegistry) {
+            core.startGroup(`🔨 Processing gradle dependencies for sub module - '${gradleBuildModule}'`);
+            const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, gradleBuildConfiguration);
+            const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT');
+            project.packages.push(...subProject.packages);
+            core.endGroup();
+        }
+        return rootProject;
     });
 }
 exports.processDependencyList = processDependencyList;
