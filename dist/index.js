@@ -701,7 +701,7 @@ function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule,
         const rootProject = (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode);
         if (subModuleMode === 'INDIVIDUAL_DEEP') {
             for (const project of rootProject.projectRegistry) {
-                core.startGroup(`🔨 Processing gradle dependencies for sub module - '${gradleBuildModule}'`);
+                core.startGroup(`🔨 Processing gradle dependencies for sub module - '${project.name}'`);
                 const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, gradleBuildConfiguration);
                 const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT');
                 project.packages.push(...subProject.packages);
