@@ -115,13 +115,15 @@ The following example showcases a gradle module in the root, without a module na
 | `gradle-build-module`    | Defines the module to retrieve the dependencies for. This is often `:app`. Defaults to ''.  |
 | `gradle-build-configuration`    | The configuration for which dependencies are resolved. Defaults to `debugCompileClasspath`. Plain java projects usually use `compileClasspath`. |
 | `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. If not provided, automatically resolved via gradle and the `module` config. |
-| `sub-module-mode`  | Defines how the action handles sub projects/modules. Possible options `IGNORE`, `COMBINED`, `INDIVIDUAL`. Default: `IGNORE`. |
+| `sub-module-mode`  | Defines how the action handles sub projects/modules. Possible options `IGNORE`, `COMBINED`, `INDIVIDUAL`, `INDIVIDUAL_DEEP`. Default: `IGNORE`. |
 
 | **sub-module-mode**      |    **Description**           |
 | ----- | ---- |
 | `IGNORE`      | Ignores sub projects/modules and skips over their dependencies. Only the core module is being imported. |
 | `COMBINED`    | Combines and flattens the sub dependencies, and attaches them to the root of the parent module. |
 | `INDIVIDUAL`  | Handles every single module as its own `Manifest` in the dependency submission API. Uses the gradle API to retrieve the module paths, and imports them individually. |
+| `INDIVIDUAL_DEEP`  | Handles every single module as its own `Manifest` in the dependency submission API. Will call the `dependencies` task for every single sub project/module to gather the full tree. Uses the gradle API to retrieve the module paths, and imports them individually. |
+
 
 
 ## Sample 🖥️

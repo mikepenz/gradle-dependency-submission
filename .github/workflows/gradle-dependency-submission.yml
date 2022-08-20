@@ -36,4 +36,4 @@ jobs:
             :library-parent-parent
           gradle-build-configuration: |-
             debugCompileClasspath
-          sub-module-mode: INDIVIDUAL
+          sub-module-mode: 'INDIVIDUAL_DEEP'
