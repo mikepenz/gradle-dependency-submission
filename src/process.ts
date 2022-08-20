@@ -170,7 +170,7 @@ export async function processDependencyList(
 
   if (subModuleMode === 'INDIVIDUAL_DEEP') {
     for (const project of rootProject.projectRegistry) {
-      core.startGroup(`🔨 Processing gradle dependencies for sub module - '${gradleBuildModule}'`)
+      core.startGroup(`🔨 Processing gradle dependencies for sub module - '${project.name}'`)
       const subDependencyList = await retrieveGradleDependencies(
         useGradlew,
         gradleProjectPath,
