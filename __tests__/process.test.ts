@@ -1,5 +1,5 @@
-import {jest, describe, test, expect} from '@jest/globals'
-import {prepareDependencyManifest, processDependencyList} from '../src/process'
+import { jest, describe, test, expect } from '@jest/globals'
+import { prepareDependencyManifest, processDependencyList } from '../src/process'
 
 jest.setTimeout(240000)
 
@@ -11,6 +11,7 @@ describe('processDependencyList', () => {
       'gradle-example',
       ':app',
       'debugCompileClasspath',
+      new Map<string, string>(),
       'IGNORE'
     )
     const dependencies = project.packages
@@ -25,6 +26,7 @@ describe('processDependencyList', () => {
         'gradle-example',
         ':app',
         'non-existing',
+        new Map<string, string>(),
         'IGNORE'
       )
     } catch (error: any) {
@@ -38,6 +40,7 @@ describe('processDependencyList', () => {
       '',
       ':',
       'compileClasspath',
+      new Map<string, string>(),
       'IGNORE'
     )
     const dependencies = project.packages
@@ -52,6 +55,7 @@ describe('processDependencyList', () => {
       ':library-parent-parent',
       'debugCompileClasspath',
       undefined,
+      new Map<string, string>(),
       'IGNORE'
     )
     expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_IGNORE.length)
@@ -65,6 +69,7 @@ describe('processDependencyList', () => {
       ':library-parent-parent',
       'debugCompileClasspath',
       undefined,
+      new Map<string, string>(),
       'COMBINED'
     )
     expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED.length)
@@ -78,6 +83,7 @@ describe('processDependencyList', () => {
       ':library-parent-parent',
       'debugCompileClasspath',
       undefined,
+      new Map<string, string>(),
       'INDIVIDUAL'
     )
     expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL.length)

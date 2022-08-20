@@ -9,29 +9,16 @@ async function run(): Promise<void> {
   let gradleProjectPath = core.getMultilineInput('gradle-project-path')
   const gradleBuildModule = core.getMultilineInput('gradle-build-module')
   const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration')
+  const gradleBuildConfigurationMapping = core.getMultilineInput('gradle-build-configuration-mapping')
   const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path')
   let subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
   const subModuleModeInput = core.getInput('sub-module-mode')
 
-  // ensure provided subModuleMode is one of the supported types
-  if (subModuleModeInput === 'INDIVIDUAL') {
-    subModuleMode = 'INDIVIDUAL'
-  } else if (subModuleModeInput === 'INDIVIDUAL_DEEP') {
-    subModuleMode = 'INDIVIDUAL_DEEP'
-  } else if (subModuleModeInput === 'COMBINED') {
-    subModuleMode = 'COMBINED'
-  } else if (subModuleModeInput === 'IGNORE') {
-    subModuleMode = 'IGNORE'
-  } else {
-    core.warning(`🚨 Unknown sub-module mode: ${subModuleModeInput}`)
-    subModuleMode = 'IGNORE'
-  }
-
+  // verify inputs are valid
   if (gradleProjectPath.length === 0) {
     core.debug(`No 'gradle-project-path' passed, using 'root'`)
     gradleProjectPath = ['']
   }
-
   const length = gradleBuildModule.length
   if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
     core.setFailed(
@@ -45,6 +32,29 @@ async function run(): Promise<void> {
     return
   }
 
+  // ensure provided subModuleMode is one of the supported types
+  if (subModuleModeInput === 'INDIVIDUAL') {
+    subModuleMode = 'INDIVIDUAL'
+  } else if (subModuleModeInput === 'INDIVIDUAL_DEEP') {
+    subModuleMode = 'INDIVIDUAL_DEEP'
+  } else if (subModuleModeInput === 'COMBINED') {
+    subModuleMode = 'COMBINED'
+  } else if (subModuleModeInput === 'IGNORE') {
+    subModuleMode = 'IGNORE'
+  } else {
+    core.warning(`🚨 Unknown sub-module-mode: ${subModuleModeInput}`)
+    subModuleMode = 'IGNORE'
+  }
+  core.debug(` sub-module-mode: ${subModuleMode}`)
+
+  // retrieve module to build configuration mapping
+  // this will overrule the default build configuration provided
+  const moduleBuildConfigurations = new Map<string, string>()
+  for (const [module, configuration] of gradleBuildConfigurationMapping.map(x => x.trim().split('|'))) {
+    moduleBuildConfigurations.set(module, configuration)
+    core.debug(` will use build configuration ${configuration} for ${module}`)
+  }
+
   core.endGroup()
 
   const manifests: Manifest[] = []
@@ -55,6 +65,7 @@ async function run(): Promise<void> {
       gradleBuildModule[i],
       gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i],
       gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined,
+      moduleBuildConfigurations,
       subModuleMode
     )
     manifests.push(...subManifests)

@@ -104,7 +104,7 @@ function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildMo
         const start = Date.now();
         const command = retrieveGradleCLI(useGradlew);
         const module = verifyModule(gradleBuildModule);
-        const dependencyList = yield exec.getExecOutput(command, [`${module}:dependencies`, '--configuration', gradleBuildConfiguration], {
+        const dependencyList = yield exec.getExecOutput(command, [`--console`, `plain`, `${module}:dependencies`, '--configuration', gradleBuildConfiguration], {
             cwd: gradleProjectPath,
             silent: !core.isDebug(),
             ignoreReturnCode: true
@@ -236,9 +236,24 @@ function run() {
         let gradleProjectPath = core.getMultilineInput('gradle-project-path');
         const gradleBuildModule = core.getMultilineInput('gradle-build-module');
         const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration');
+        const gradleBuildConfigurationMapping = core.getMultilineInput('gradle-build-configuration-mapping');
         const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path');
         let subModuleMode;
         const subModuleModeInput = core.getInput('sub-module-mode');
+        // verify inputs are valid
+        if (gradleProjectPath.length === 0) {
+            core.debug(`No 'gradle-project-path' passed, using 'root'`);
+            gradleProjectPath = [''];
+        }
+        const length = gradleBuildModule.length;
+        if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
+            core.setFailed('When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1');
+            return;
+        }
+        else if (gradleDependencyPath.length !== 0 && gradleDependencyPath.length !== length) {
+            core.setFailed('When passing the `gradle-dependency-path`, this input must have the same amount of items as the `gradle-build-module` or none');
+            return;
+        }
         // ensure provided subModuleMode is one of the supported types
         if (subModuleModeInput === 'INDIVIDUAL') {
             subModuleMode = 'INDIVIDUAL';
@@ -253,26 +268,21 @@ function run() {
             subModuleMode = 'IGNORE';
         }
         else {
-            core.warning(`🚨 Unknown sub-module mode: ${subModuleModeInput}`);
+            core.warning(`🚨 Unknown sub-module-mode: ${subModuleModeInput}`);
             subModuleMode = 'IGNORE';
         }
-        if (gradleProjectPath.length === 0) {
-            core.debug(`No 'gradle-project-path' passed, using 'root'`);
-            gradleProjectPath = [''];
-        }
-        const length = gradleBuildModule.length;
-        if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
-            core.setFailed('When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1');
-            return;
-        }
-        else if (gradleDependencyPath.length !== 0 && gradleDependencyPath.length !== length) {
-            core.setFailed('When passing the `gradle-dependency-path`, this input must have the same amount of items as the `gradle-build-module` or none');
-            return;
+        core.debug(` sub-module-mode: ${subModuleMode}`);
+        // retrieve module to build configuration mapping
+        // this will overrule the default build configuration provided
+        const moduleBuildConfigurations = new Map();
+        for (const [module, configuration] of gradleBuildConfigurationMapping.map(x => x.trim().split('|'))) {
+            moduleBuildConfigurations.set(module, configuration);
+            core.debug(` will use build configuration ${configuration} for ${module}`);
         }
         core.endGroup();
         const manifests = [];
         for (let i = 0; i < length; i++) {
-            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i], gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, subModuleMode);
+            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i], gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode);
             manifests.push(...subManifests);
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
@@ -578,9 +588,9 @@ const parse_1 = __nccwpck_require__(5223);
 const path = __importStar(__nccwpck_require__(1017));
 const gradle_1 = __nccwpck_require__(0);
 const utils_1 = __nccwpck_require__(918);
-function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, subModuleMode) {
+function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
-        const results = yield processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, subModuleMode);
+        const results = yield processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode);
         const manifests = [];
         for (const result of results) {
             const { project, packageCache, directDependencies, indirectDependencies } = result;
@@ -630,9 +640,9 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
     });
 }
 exports.prepareDependencyManifest = prepareDependencyManifest;
-function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, subModuleMode) {
+function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
-        const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, subModuleMode);
+        const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode);
         // inject the gradle dependency path into the root project
         rootProject.dependencyPath = gradleDependencyPath;
         const flattenedProjects = [];
@@ -693,16 +703,16 @@ function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gr
     });
 }
 exports.processGradleGraph = processGradleGraph;
-function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, subModuleMode) {
+function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`);
-        const dependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration);
+        const dependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration);
         core.endGroup();
         const rootProject = (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode);
         if (subModuleMode === 'INDIVIDUAL_DEEP') {
             for (const project of rootProject.projectRegistry) {
                 core.startGroup(`🔨 Processing gradle dependencies for sub module - '${project.name}'`);
-                const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, gradleBuildConfiguration);
+                const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, moduleBuildConfiguration.get(project.name) || gradleBuildConfiguration);
                 const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT');
                 project.packages.push(...subProject.packages);
                 core.endGroup();
