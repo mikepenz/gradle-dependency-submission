@@ -65,7 +65,7 @@ export async function retrieveGradleDependencies(
   const module = verifyModule(gradleBuildModule)
   const dependencyList = await exec.getExecOutput(
     command,
-    [`${module}:dependencies`, '--configuration', gradleBuildConfiguration],
+    [`--console`, `plain`, `${module}:dependencies`, '--configuration', gradleBuildConfiguration],
     {
       cwd: gradleProjectPath,
       silent: !core.isDebug(),

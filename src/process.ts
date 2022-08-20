@@ -12,6 +12,7 @@ export async function prepareDependencyManifest(
   gradleBuildModule: string,
   gradleBuildConfiguration: string,
   gradleDependencyPath: string | undefined,
+  moduleBuildConfiguration: Map<string, string>,
   subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
 ): Promise<Manifest[]> {
   const results = await processGradleGraph(
@@ -20,6 +21,7 @@ export async function prepareDependencyManifest(
     gradleBuildModule,
     gradleBuildConfiguration,
     gradleDependencyPath,
+    moduleBuildConfiguration,
     subModuleMode
   )
 
@@ -80,6 +82,7 @@ export async function processGradleGraph(
   gradleBuildModule: string,
   gradleBuildConfiguration: string,
   gradleDependencyPath: string | undefined,
+  moduleBuildConfiguration: Map<string, string>,
   subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
 ): Promise<Result[]> {
   const rootProject = await processDependencyList(
@@ -87,6 +90,7 @@ export async function processGradleGraph(
     gradleProjectPath,
     gradleBuildModule,
     gradleBuildConfiguration,
+    moduleBuildConfiguration,
     subModuleMode
   )
 
@@ -156,6 +160,7 @@ export async function processDependencyList(
   gradleProjectPath: string,
   gradleBuildModule: string,
   gradleBuildConfiguration: string,
+  moduleBuildConfiguration: Map<string, string>,
   subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
 ): Promise<RootProject> {
   core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`)
@@ -163,7 +168,7 @@ export async function processDependencyList(
     useGradlew,
     gradleProjectPath,
     gradleBuildModule,
-    gradleBuildConfiguration
+    moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration
   )
   core.endGroup()
   const rootProject = parseGradleGraph(gradleBuildModule, dependencyList, subModuleMode)
@@ -175,7 +180,7 @@ export async function processDependencyList(
         useGradlew,
         gradleProjectPath,
         project.name,
-        gradleBuildConfiguration
+        moduleBuildConfiguration.get(project.name) || gradleBuildConfiguration
       )
       const subProject = parseGradleGraph(project.name, subDependencyList, 'IGNORE_SILENT')
       project.packages.push(...subProject.packages)
