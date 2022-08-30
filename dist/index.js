@@ -234,7 +234,7 @@ function run() {
         core.startGroup(`📘 Reading input values`);
         const useGradlew = core.getBooleanInput('use-gradlew');
         let gradleProjectPath = core.getMultilineInput('gradle-project-path');
-        const gradleBuildModule = core.getMultilineInput('gradle-build-module');
+        let gradleBuildModule = core.getMultilineInput('gradle-build-module');
         const gradleBuildConfiguration = core.getMultilineInput('gradle-build-configuration');
         const gradleBuildConfigurationMapping = core.getMultilineInput('gradle-build-configuration-mapping');
         const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path');
@@ -244,6 +244,10 @@ function run() {
         if (gradleProjectPath.length === 0) {
             core.debug(`No 'gradle-project-path' passed, using 'root'`);
             gradleProjectPath = [''];
+        }
+        if (gradleBuildModule.length === 0) {
+            core.info(`No 'gradle-build-module' passed, using ':'`);
+            gradleBuildModule = [':'];
         }
         const length = gradleBuildModule.length;
         if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
