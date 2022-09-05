@@ -85,7 +85,7 @@ export async function processGradleGraph(
   moduleBuildConfiguration: Map<string, string>,
   subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
 ): Promise<Result[]> {
-  const rootProject = await processDependencyList(
+  const rootProject = await processFullDependencyList(
     useGradlew,
     gradleProjectPath,
     gradleBuildModule,
@@ -105,7 +105,9 @@ export async function processGradleGraph(
   } else if (subModuleMode === 'COMBINED') {
     // merge all dependencies into the parent project, ommiting any child project.
     for (const project of rootProject.projectRegistry) {
-      rootProject.packages.push(...project.packages)
+      for (const [key, value] of project.packages) {
+        rootProject.packages.set(key, value)
+      }
     }
   } else if (rootProject.projectRegistry.length !== 0) {
     core.warning(
@@ -155,7 +157,7 @@ export async function processGradleGraph(
   return results
 }
 
-export async function processDependencyList(
+export async function processFullDependencyList(
   useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
@@ -163,32 +165,65 @@ export async function processDependencyList(
   moduleBuildConfiguration: Map<string, string>,
   subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
 ): Promise<RootProject> {
-  core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`)
-  const dependencyList = await retrieveGradleDependencies(
+  const rootProject = await processDependencyList(
     useGradlew,
+    true,
     gradleProjectPath,
     gradleBuildModule,
-    moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration
+    gradleBuildConfiguration,
+    moduleBuildConfiguration,
+    subModuleMode
   )
-  core.endGroup()
-  const rootProject = parseGradleGraph(gradleBuildModule, dependencyList, subModuleMode)
 
   if (subModuleMode === 'INDIVIDUAL_DEEP') {
     for (const project of rootProject.projectRegistry) {
-      core.startGroup(`🔨 Processing gradle dependencies for sub module - '${project.name}'`)
-      const subDependencyList = await retrieveGradleDependencies(
+      const subProject = await processDependencyList(
         useGradlew,
+        false,
         gradleProjectPath,
         project.name,
-        moduleBuildConfiguration.get(project.name) || gradleBuildConfiguration
+        gradleBuildConfiguration,
+        moduleBuildConfiguration,
+        'IGNORE_SILENT'
       )
-      const subProject = parseGradleGraph(project.name, subDependencyList, 'IGNORE_SILENT')
-      project.packages.push(...subProject.packages)
-      core.endGroup()
+      for (const [key, value] of subProject.packages) {
+        project.packages.set(key, value)
+      }
     }
   }
 
   return rootProject
+}
+
+async function processDependencyList(
+  useGradlew: boolean,
+  root: boolean,
+  gradleProjectPath: string,
+  gradleBuildModule: string,
+  gradleBuildConfiguration: string,
+  moduleBuildConfiguration: Map<string, string>,
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT'
+): Promise<RootProject> {
+  core.startGroup(`🔨 Processing gradle dependencies for ${root ? 'root' : 'sub'} module - '${gradleBuildModule}'`)
+
+  const configurations = (moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration).split(`,`)
+  const lists = await Promise.all(
+    configurations.map(async (configuration): Promise<string> => {
+      return await retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildModule, configuration)
+    })
+  )
+  core.endGroup()
+
+  // merge together all dependencies of the provided configurations dependencies
+  const primaryConfiguration = parseGradleGraph(gradleBuildModule, lists[0], subModuleMode)
+  for (let i = 1; i <= lists.length; i++) {
+    const subConfiguration = parseGradleGraph(gradleBuildModule, lists[i], subModuleMode)
+    for (const [key, value] of subConfiguration.packages) {
+      primaryConfiguration.packages.set(key, value)
+    }
+  }
+
+  return primaryConfiguration
 }
 
 interface Result {

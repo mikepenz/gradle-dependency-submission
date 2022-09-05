@@ -28,7 +28,7 @@ async function run(): Promise<void> {
   const length = gradleBuildModule.length
   if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
     core.setFailed(
-      'When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1'
+      `When passing multiple modules ('gradle-build-module' (${length})), other configurations must have the same amount of items or exactly 1 to specify for all modules`
     )
     return
   } else if (gradleDependencyPath.length !== 0 && gradleDependencyPath.length !== length) {
@@ -51,7 +51,7 @@ async function run(): Promise<void> {
     core.warning(`🚨 Unknown sub-module-mode: ${subModuleModeInput}`)
     subModuleMode = 'IGNORE'
   }
-  core.debug(` sub-module-mode: ${subModuleMode}`)
+  core.debug(`sub-module-mode: ${subModuleMode}`)
 
   // retrieve module to build configuration mapping
   // this will overrule the default build configuration provided

@@ -1,12 +1,12 @@
 import { jest, describe, test, expect } from '@jest/globals'
-import { prepareDependencyManifest, processDependencyList } from '../src/process'
+import { prepareDependencyManifest, processFullDependencyList } from '../src/process'
 
 jest.setTimeout(240000)
 
-describe('processDependencyList', () => {
+describe('processFullDependencyList', () => {
   process.env['GITHUB_WORKSPACE'] = '.'
   test('run in gradle-example', async () => {
-    const project = await processDependencyList(
+    const project = await processFullDependencyList(
       true,
       'gradle-example',
       ':app',
@@ -21,7 +21,7 @@ describe('processDependencyList', () => {
 
   test('run in gradle-example with invalid configuration', async () => {
     try {
-      await processDependencyList(
+      await processFullDependencyList(
         true,
         'gradle-example',
         ':app',
@@ -35,7 +35,7 @@ describe('processDependencyList', () => {
   })
 
   test('run in root', async () => {
-    const project = await processDependencyList(
+    const project = await processFullDependencyList(
       false,
       '',
       ':',

@@ -37,6 +37,8 @@
 
 This action executes the `dependencies` task of a given Gradle project, and will submit the dependency tree via the [Dependency Submission API](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api).
 
+> Note: The action requires Gradle 7.5.x or newer to [retrieve individual properties](https://github.com/mikepenz/gradle-dependency-submission/blob/main/src/gradle.ts#L125).
+
 ## Setup
 
 ### Configure the workflow
