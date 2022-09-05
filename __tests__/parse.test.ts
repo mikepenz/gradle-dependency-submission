@@ -481,19 +481,19 @@ const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-core",
     },
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-logging",
     },
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-secure-sm",
     },
     {
@@ -508,13 +508,13 @@ const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
           name: ":libs:elasticsearch-core",
         },
       ],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-x-content",
     },
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-geo",
     },
     {
@@ -574,7 +574,7 @@ const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-plugin-classloader",
     },
   ],
@@ -805,19 +805,19 @@ const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-core",
     },
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-logging",
     },
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-secure-sm",
     },
     {
@@ -832,13 +832,13 @@ const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
           name: ":libs:elasticsearch-core",
         },
       ],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-x-content",
     },
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-geo",
     },
     {
@@ -898,10 +898,9 @@ const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
     {
       dependencyPath: undefined,
       childProjects: [],
-      packages: new Map(),
+      packages: [],
       name: ":libs:elasticsearch-plugin-classloader",
     },
   ],
 }
-
 

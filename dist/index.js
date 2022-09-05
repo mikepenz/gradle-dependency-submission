@@ -251,7 +251,7 @@ function run() {
         }
         const length = gradleBuildModule.length;
         if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
-            core.setFailed('When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1');
+            core.setFailed(`When passing multiple modules ('gradle-build-module' (${length})), other configurations must have the same amount of items or exactly 1 to specify for all modules`);
             return;
         }
         else if (gradleDependencyPath.length !== 0 && gradleDependencyPath.length !== length) {
@@ -275,7 +275,7 @@ function run() {
             core.warning(`🚨 Unknown sub-module-mode: ${subModuleModeInput}`);
             subModuleMode = 'IGNORE';
         }
-        core.debug(` sub-module-mode: ${subModuleMode}`);
+        core.debug(`sub-module-mode: ${subModuleMode}`);
         // retrieve module to build configuration mapping
         // this will overrule the default build configuration provided
         const moduleBuildConfigurations = new Map();
@@ -585,7 +585,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.processDependencyList = exports.processGradleGraph = exports.prepareDependencyManifest = void 0;
+exports.processFullDependencyList = exports.processGradleGraph = exports.prepareDependencyManifest = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const parse_1 = __nccwpck_require__(5223);
@@ -646,7 +646,7 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
 exports.prepareDependencyManifest = prepareDependencyManifest;
 function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
-        const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode);
+        const rootProject = yield processFullDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode);
         // inject the gradle dependency path into the root project
         rootProject.dependencyPath = gradleDependencyPath;
         const flattenedProjects = [];
@@ -707,25 +707,36 @@ function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gr
     });
 }
 exports.processGradleGraph = processGradleGraph;
-function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode) {
+function processFullDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`);
-        const dependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration);
-        core.endGroup();
-        const rootProject = (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode);
+        const rootProject = yield processDependencyList(useGradlew, true, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode);
         if (subModuleMode === 'INDIVIDUAL_DEEP') {
             for (const project of rootProject.projectRegistry) {
-                core.startGroup(`🔨 Processing gradle dependencies for sub module - '${project.name}'`);
-                const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, moduleBuildConfiguration.get(project.name) || gradleBuildConfiguration);
-                const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT');
+                const subProject = yield processDependencyList(useGradlew, false, gradleProjectPath, project.name, gradleBuildConfiguration, moduleBuildConfiguration, 'IGNORE_SILENT');
                 project.packages.push(...subProject.packages);
-                core.endGroup();
             }
         }
         return rootProject;
     });
 }
-exports.processDependencyList = processDependencyList;
+exports.processFullDependencyList = processFullDependencyList;
+function processDependencyList(useGradlew, root, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.startGroup(`🔨 Processing gradle dependencies for ${root ? 'root' : 'sub'} module - '${gradleBuildModule}'`);
+        const configurations = (moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration).split(`,`);
+        const lists = yield Promise.all(configurations.map((configuration) => __awaiter(this, void 0, void 0, function* () {
+            return yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, configuration);
+        })));
+        core.endGroup();
+        // merge together all dependencies of the provided configurations dependencies
+        const primaryConfiguration = (0, parse_1.parseGradleGraph)(gradleBuildModule, lists[0], subModuleMode);
+        for (let i = 1; i < lists.length; i++) {
+            const subConfiguration = (0, parse_1.parseGradleGraph)(gradleBuildModule, lists[i], subModuleMode);
+            primaryConfiguration.packages.push(...subConfiguration.packages);
+        }
+        return primaryConfiguration;
+    });
+}
 
 
 /***/ }),

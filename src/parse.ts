@@ -86,7 +86,7 @@ export function parseGradleGraph(
 
   // parse dependency tree
   parseGradleDependency(rootProject, rootProject, linesIterator, undefined, 0, subModuleMode)
-  core.info(`Completed parsing ${rootProject.packages.size} dependency associations within ${Date.now() - start}ms`)
+  core.info(`Completed parsing ${rootProject.packages.length} dependency associations within ${Date.now() - start}ms`)
   core.endGroup()
   return rootProject
 }
@@ -147,11 +147,11 @@ function parseGradleDependency(
 
       const parent = parseGradlePackage(line, level)
       if (parentParent) {
-        project.packages.set(parentParent, parent)
+        project.packages.push([parentParent, parent])
       }
       parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode)
       if (level === 0 || !parentParent) {
-        project.packages.set(parent, undefined)
+        project.packages.push([parent, undefined])
       }
     } else if (
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
@@ -173,7 +173,7 @@ export class Project {
   name: string
   dependencyPath: string | undefined = undefined
   childProjects: Project[] = []
-  packages: Map<PackageURL, PackageURL | undefined> = new Map()
+  packages: [PackageURL, PackageURL | undefined][] = []
 
   constructor(name: string) {
     this.name = name

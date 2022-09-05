@@ -105,9 +105,7 @@ export async function processGradleGraph(
   } else if (subModuleMode === 'COMBINED') {
     // merge all dependencies into the parent project, ommiting any child project.
     for (const project of rootProject.projectRegistry) {
-      for (const [key, value] of project.packages) {
-        rootProject.packages.set(key, value)
-      }
+      rootProject.packages.push(...project.packages)
     }
   } else if (rootProject.projectRegistry.length !== 0) {
     core.warning(
@@ -186,9 +184,7 @@ export async function processFullDependencyList(
         moduleBuildConfiguration,
         'IGNORE_SILENT'
       )
-      for (const [key, value] of subProject.packages) {
-        project.packages.set(key, value)
-      }
+      project.packages.push(...subProject.packages)
     }
   }
 
@@ -216,11 +212,9 @@ async function processDependencyList(
 
   // merge together all dependencies of the provided configurations dependencies
   const primaryConfiguration = parseGradleGraph(gradleBuildModule, lists[0], subModuleMode)
-  for (let i = 1; i <= lists.length; i++) {
+  for (let i = 1; i < lists.length; i++) {
     const subConfiguration = parseGradleGraph(gradleBuildModule, lists[i], subModuleMode)
-    for (const [key, value] of subConfiguration.packages) {
-      primaryConfiguration.packages.set(key, value)
-    }
+    primaryConfiguration.packages.push(...subConfiguration.packages)
   }
 
   return primaryConfiguration
