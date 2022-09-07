@@ -53,7 +53,7 @@ const semver_1 = __importDefault(__nccwpck_require__(1383));
 function singlePropertySupport(useGradlew, gradleProjectPath) {
     return __awaiter(this, void 0, void 0, function* () {
         const version = yield fetchGradleVersion(useGradlew, gradleProjectPath);
-        const semverVersion = semver_1.default.parse(version);
+        const semverVersion = semver_1.default.coerce(version);
         if (semverVersion) {
             if (semver_1.default.satisfies(semverVersion, '>=7.5.0')) {
                 return true;
