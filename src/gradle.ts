@@ -8,7 +8,7 @@ import semver from 'semver'
  */
 export async function singlePropertySupport(useGradlew: boolean, gradleProjectPath: string): Promise<boolean> {
   const version = await fetchGradleVersion(useGradlew, gradleProjectPath)
-  const semverVersion = semver.parse(version)
+  const semverVersion = semver.coerce(version)
   if (semverVersion) {
     if (semver.satisfies(semverVersion, '>=7.5.0')) {
       return true
