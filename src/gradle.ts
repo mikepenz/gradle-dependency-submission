@@ -86,6 +86,27 @@ export async function retrieveGradleDependencies(
 }
 
 /**
+ * Retrieves the full build environment from gradle by running the `buildEnvironment` task for the provided project.
+ */
+export async function retrieveGradleBuildEnvironment(useGradlew: boolean, gradleProjectPath: string): Promise<string> {
+  const start = Date.now()
+
+  const command = retrieveGradleCLI(useGradlew)
+  const dependencyList = await exec.getExecOutput(command, [`--console`, `plain`, `:buildEnvironment`], {
+    cwd: gradleProjectPath,
+    silent: !core.isDebug(),
+    ignoreReturnCode: true
+  })
+  if (dependencyList.exitCode !== 0) {
+    core.error(dependencyList.stderr)
+    core.setFailed(`'${command} :buildEnvironment' resolution failed!`)
+    throw new Error(`Failed to execute '${command} :buildEnvironment'`)
+  }
+  core.info(`Completed retrieving the 'buildEnvironment' within ${Date.now() - start}ms`)
+  return dependencyList.stdout
+}
+
+/**
  * Retrieves the `buildFile` `property` from a given `module` name in the configured gradle project.
  */
 export async function retrieveGradleBuildPath(

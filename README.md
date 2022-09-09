@@ -35,7 +35,9 @@
 - Highly flexible configuration
 - Submits all maven dependencies via the Dependency Submission API
 
-This action executes the `dependencies` task of a given Gradle project, and will submit the dependency tree via the [Dependency Submission API](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api).
+> **Note**: This action executes the `dependencies` task of a given Gradle project, and will submit the dependency tree via the [Dependency Submission API](https://docs.github.com/en/code-security/supply-chain-security/understanding-your-software-supply-chain/using-the-dependency-submission-api).
+
+> **Note**: At this time `Gradle 7.5` or newer is required as it offers a new task to retrieve individual properties. (Used to retrieve build file path, and project name)
 
 ## Setup
 
@@ -117,6 +119,7 @@ The following example showcases a gradle module in the root, without a module na
 | `gradle-build-configuration-mapping`    | Optional configuration to allow per module build configuration mapping. Provide one mapping per line in the format like: `:module\|compileClasspath` |
 | `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. If not provided, automatically resolved via gradle and the `module` config. |
 | `sub-module-mode`  | Defines how the action handles sub projects/modules. Possible options `IGNORE`, `COMBINED`, `INDIVIDUAL`, `INDIVIDUAL_DEEP`. Default: `IGNORE`. |
+| `include-build-environment`  | Optional mode to enable the submission of the `buildEnvironment` as individual Manifest via the dependency submission API. Default: `false`. |
 
 | **sub-module-mode**      |    **Description**           |
 | ----- | ---- |
@@ -124,8 +127,6 @@ The following example showcases a gradle module in the root, without a module na
 | `COMBINED`    | Combines and flattens the sub dependencies, and attaches them to the root of the parent module. |
 | `INDIVIDUAL`  | Handles every single module as its own `Manifest` in the dependency submission API. Uses the gradle API to retrieve the module paths, and imports them individually. |
 | `INDIVIDUAL_DEEP`  | Handles every single module as its own `Manifest` in the dependency submission API. Will call the `dependencies` task for every single sub project/module to gather the full tree. Uses the gradle API to retrieve the module paths, and imports them individually. |
-
-
 
 ## Sample 🖥️
 

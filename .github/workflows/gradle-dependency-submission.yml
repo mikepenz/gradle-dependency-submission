@@ -39,3 +39,4 @@ jobs:
           gradle-build-configuration-mapping: |-
             :library-child-2|compileClasspath
           sub-module-mode: 'INDIVIDUAL_DEEP'
+          include-build-environment: true
