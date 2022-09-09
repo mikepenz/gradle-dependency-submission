@@ -572,6 +572,9 @@ class RootProject extends Project {
      * Returns existing instance otherwise
      */
     getOrRegisterProject(project) {
+        if (project.name === this.name) {
+            return this;
+        }
         const exists = this.projectRegistry.find(item => item.name === project.name);
         if (!exists) {
             this.projectRegistry.push(project);
