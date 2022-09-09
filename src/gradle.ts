@@ -57,32 +57,52 @@ export async function retrieveGradleDependencies(
   useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
-  gradleBuildConfiguration: string
+  gradleBuildConfiguration: string | undefined
 ): Promise<string> {
   const start = Date.now()
 
   const command = retrieveGradleCLI(useGradlew)
   const module = verifyModule(gradleBuildModule)
-  const dependencyList = await exec.getExecOutput(
-    command,
-    [`--console`, `plain`, `${module}:dependencies`, '--configuration', gradleBuildConfiguration],
-    {
+
+  if (gradleBuildConfiguration !== undefined && gradleBuildConfiguration !== '') {
+    const dependencyList = await exec.getExecOutput(
+      command,
+      [`--console`, `plain`, `${module}:dependencies`, '--configuration', gradleBuildConfiguration],
+      {
+        cwd: gradleProjectPath,
+        silent: !core.isDebug(),
+        ignoreReturnCode: true
+      }
+    )
+    if (dependencyList.exitCode !== 0) {
+      core.error(dependencyList.stderr)
+      core.setFailed(
+        `'${command} ${module}:dependencies --configuration ${gradleBuildConfiguration}' resolution failed!`
+      )
+      throw new Error(
+        `Failed to execute '${command} ${module}:dependencies --configuration ${gradleBuildConfiguration}'`
+      )
+    }
+    core.info(
+      `Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${
+        Date.now() - start
+      }ms`
+    )
+    return dependencyList.stdout
+  } else {
+    const dependencyList = await exec.getExecOutput(command, [`--console`, `plain`, `${module}:dependencies`], {
       cwd: gradleProjectPath,
       silent: !core.isDebug(),
       ignoreReturnCode: true
+    })
+    if (dependencyList.exitCode !== 0) {
+      core.error(dependencyList.stderr)
+      core.setFailed(`'${command} ${module}:dependencies resolution failed!`)
+      throw new Error(`Failed to execute '${command} ${module}:dependencies'`)
     }
-  )
-  if (dependencyList.exitCode !== 0) {
-    core.error(dependencyList.stderr)
-    core.setFailed(`'${command} ${module}:dependencies' resolution failed!`)
-    throw new Error(`Failed to execute '${command} ${module}:dependencies'`)
+    core.info(`Completed retrieving the 'dependencies' within ${Date.now() - start}ms`)
+    return dependencyList.stdout
   }
-  core.info(
-    `Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${
-      Date.now() - start
-    }ms`
-  )
-  return dependencyList.stdout
 }
 
 /**
