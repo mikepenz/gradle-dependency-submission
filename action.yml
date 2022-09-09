@@ -35,6 +35,10 @@ inputs:
     required: false
     description: 'Defines how the action handles submodules (sub projects). "IGNORE", "COMBINED", "INDIVIDUAL". Default: "IGNORE"'
     default: 'IGNORE'
+  include-build-environment:
+    required: false
+    description: 'Optional mode to also submit the `buildEnvironment` to the dependency submission API. This will execute the `buildEnvironment` task on the root module.'
+    default: 'false'
 runs:
   using: 'node16'
   main: 'dist/index.js'

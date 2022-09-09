@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {Snapshot, Manifest, submitSnapshot} from '@github/dependency-submission-toolkit'
-import {prepareDependencyManifest} from './process'
+import {prepareBuildEnvironmentManifest, prepareDependencyManifest} from './process'
 
 async function run(): Promise<void> {
   core.startGroup(`📘 Reading input values`)
@@ -13,6 +13,7 @@ async function run(): Promise<void> {
   const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path')
   let subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
   const subModuleModeInput = core.getInput('sub-module-mode')
+  const includeBuildEnvironment = core.getBooleanInput('include-build-environment')
 
   // verify inputs are valid
   if (gradleProjectPath.length === 0) {
@@ -75,6 +76,11 @@ async function run(): Promise<void> {
       subModuleMode
     )
     manifests.push(...subManifests)
+  }
+
+  if (includeBuildEnvironment) {
+    const buildEnvironmentManifest = await prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath[0], undefined)
+    manifests.push(...buildEnvironmentManifest)
   }
 
   const snapshot = new Snapshot(

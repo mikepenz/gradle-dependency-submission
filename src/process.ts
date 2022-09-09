@@ -3,9 +3,17 @@ import * as core from '@actions/core'
 import {Manifest, PackageCache} from '@github/dependency-submission-toolkit'
 import {parseGradleGraph, RootProject, Project} from './parse'
 import * as path from 'path'
-import {retrieveGradleBuildPath, retrieveGradleDependencies, retrieveGradleProjectName} from './gradle'
+import {
+  retrieveGradleBuildEnvironment,
+  retrieveGradleBuildPath,
+  retrieveGradleDependencies,
+  retrieveGradleProjectName
+} from './gradle'
 import {convertToRelativePath} from './utils'
 
+/**
+ * Retrieves the dependencies from gradle for the define dmodule and builds the Manifest for it.
+ */
 export async function prepareDependencyManifest(
   useGradlew: boolean,
   gradleProjectPath: string,
@@ -15,76 +23,6 @@ export async function prepareDependencyManifest(
   moduleBuildConfiguration: Map<string, string>,
   subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
 ): Promise<Manifest[]> {
-  const results = await processGradleGraph(
-    useGradlew,
-    gradleProjectPath,
-    gradleBuildModule,
-    gradleBuildConfiguration,
-    gradleDependencyPath,
-    moduleBuildConfiguration,
-    subModuleMode
-  )
-
-  const manifests: Manifest[] = []
-  for (const result of results) {
-    const {project, packageCache, directDependencies, indirectDependencies} = result
-
-    let dependencyPath: string
-    if (project.dependencyPath === undefined) {
-      const buildPath = await retrieveGradleBuildPath(useGradlew, gradleProjectPath, project.name)
-      if (buildPath === undefined) {
-        core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${project.name}`)
-        throw new Error(`Failed to retrieve gradle build path.`)
-      } else {
-        dependencyPath = convertToRelativePath(buildPath)
-      }
-    } else {
-      dependencyPath = path.join(gradleProjectPath, project.dependencyPath)
-    }
-
-    core.startGroup(`📦️ Preparing Dependency Snapshot - '${project.name}'`)
-    let name = path.dirname(dependencyPath)
-    if (name === '.') {
-      // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
-      name = (await retrieveGradleProjectName(useGradlew, gradleProjectPath)) || dependencyPath
-    }
-    const manifest = new Manifest(name, dependencyPath)
-    core.info(`Connection ${directDependencies.length} direct dependencies`)
-
-    for (const pkgUrl of directDependencies) {
-      const dep = packageCache.lookupPackage(pkgUrl)
-      if (!dep) {
-        core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`)
-        throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache')
-      }
-      manifest.addDirectDependency(dep)
-    }
-
-    core.info(`Connection ${indirectDependencies.length} indirect dependencies`)
-    for (const pkgUrl of indirectDependencies) {
-      const dep = packageCache.lookupPackage(pkgUrl)
-      if (!dep) {
-        core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`)
-        throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache')
-      }
-      manifest.addIndirectDependency(dep)
-    }
-
-    core.endGroup()
-    manifests.push(manifest)
-  }
-  return manifests
-}
-
-export async function processGradleGraph(
-  useGradlew: boolean,
-  gradleProjectPath: string,
-  gradleBuildModule: string,
-  gradleBuildConfiguration: string,
-  gradleDependencyPath: string | undefined,
-  moduleBuildConfiguration: Map<string, string>,
-  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
-): Promise<Result[]> {
   const rootProject = await processDependencyList(
     useGradlew,
     gradleProjectPath,
@@ -97,6 +35,42 @@ export async function processGradleGraph(
   // inject the gradle dependency path into the root project
   rootProject.dependencyPath = gradleDependencyPath
 
+  // construct the Manifests
+  const manifests: Manifest[] = []
+  for (const result of transformProject(rootProject, subModuleMode)) {
+    manifests.push(await buildManifest(result, useGradlew, gradleProjectPath))
+  }
+  return manifests
+}
+
+/**
+ * Retrieves the build environment from gradle and builds the Manifest for it.
+ */
+export async function prepareBuildEnvironmentManifest(
+  useGradlew: boolean,
+  gradleProjectPath: string,
+  gradleDependencyPath: string | undefined
+): Promise<Manifest[]> {
+  const rootProject = await processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath)
+
+  // inject the gradle dependency path into the root project
+  rootProject.dependencyPath = gradleDependencyPath
+
+  // construct the Manifests
+  const manifests: Manifest[] = []
+  for (const result of transformProject(rootProject, 'COMBINED')) {
+    manifests.push(await buildManifest(result, useGradlew, gradleProjectPath, 'buildEnvironment'))
+  }
+  return manifests
+}
+
+/**
+ * Transforms the retrieved [Project] into the required format for
+ */
+function transformProject(
+  rootProject: RootProject,
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
+): Result[] {
   const flattenedProjects: Project[] = []
   flattenedProjects.push(rootProject)
   if (subModuleMode === 'INDIVIDUAL' || subModuleMode === 'INDIVIDUAL_DEEP') {
@@ -155,6 +129,62 @@ export async function processGradleGraph(
   return results
 }
 
+/**
+ *
+ */
+async function buildManifest(
+  result: Result,
+  useGradlew: boolean,
+  gradleProjectPath: string,
+  manifestName: string | undefined = undefined
+): Promise<Manifest> {
+  const {project, packageCache, directDependencies, indirectDependencies} = result
+
+  let dependencyPath: string
+  if (project.dependencyPath === undefined) {
+    const buildPath = await retrieveGradleBuildPath(useGradlew, gradleProjectPath, project.name)
+    if (buildPath === undefined) {
+      core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${project.name}`)
+      throw new Error(`Failed to retrieve gradle build path.`)
+    } else {
+      dependencyPath = convertToRelativePath(buildPath)
+    }
+  } else {
+    dependencyPath = path.join(gradleProjectPath, project.dependencyPath)
+  }
+
+  core.startGroup(`📦️ Preparing Dependency Snapshot - '${project.name}'`)
+  let name = manifestName || path.dirname(dependencyPath)
+  if (name === '.') {
+    // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
+    name = (await retrieveGradleProjectName(useGradlew, gradleProjectPath)) || dependencyPath
+  }
+  const manifest = new Manifest(name, dependencyPath)
+  core.info(`Connection ${directDependencies.length} direct dependencies`)
+
+  for (const pkgUrl of directDependencies) {
+    const dep = packageCache.lookupPackage(pkgUrl)
+    if (!dep) {
+      core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`)
+      throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache')
+    }
+    manifest.addDirectDependency(dep)
+  }
+
+  core.info(`Connection ${indirectDependencies.length} indirect dependencies`)
+  for (const pkgUrl of indirectDependencies) {
+    const dep = packageCache.lookupPackage(pkgUrl)
+    if (!dep) {
+      core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`)
+      throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache')
+    }
+    manifest.addIndirectDependency(dep)
+  }
+
+  core.endGroup()
+  return manifest
+}
+
 export async function processDependencyList(
   useGradlew: boolean,
   gradleProjectPath: string,
@@ -189,6 +219,16 @@ export async function processDependencyList(
   }
 
   return rootProject
+}
+
+export async function processBuildEnvironmentDependencyList(
+  useGradlew: boolean,
+  gradleProjectPath: string
+): Promise<RootProject> {
+  core.startGroup(`🔨 Processing gradle buildEnvironment`)
+  const dependencyList = await retrieveGradleBuildEnvironment(useGradlew, gradleProjectPath)
+  core.endGroup()
+  return parseGradleGraph(':', dependencyList, 'IGNORE_SILENT')
 }
 
 interface Result {
