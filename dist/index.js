@@ -42,7 +42,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.retrieveGradleProjectName = exports.retrieveGradleBuildPath = exports.retrieveGradleDependencies = exports.singlePropertySupport = void 0;
+exports.retrieveGradleProjectName = exports.retrieveGradleBuildPath = exports.retrieveGradleBuildEnvironment = exports.retrieveGradleDependencies = exports.singlePropertySupport = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const semver_1 = __importDefault(__nccwpck_require__(1383));
@@ -119,6 +119,28 @@ function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildMo
     });
 }
 exports.retrieveGradleDependencies = retrieveGradleDependencies;
+/**
+ * Retrieves the full build environment from gradle by running the `buildEnvironment` task for the provided project.
+ */
+function retrieveGradleBuildEnvironment(useGradlew, gradleProjectPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const start = Date.now();
+        const command = retrieveGradleCLI(useGradlew);
+        const dependencyList = yield exec.getExecOutput(command, [`--console`, `plain`, `:buildEnvironment`], {
+            cwd: gradleProjectPath,
+            silent: !core.isDebug(),
+            ignoreReturnCode: true
+        });
+        if (dependencyList.exitCode !== 0) {
+            core.error(dependencyList.stderr);
+            core.setFailed(`'${command} :buildEnvironment' resolution failed!`);
+            throw new Error(`Failed to execute '${command} :buildEnvironment'`);
+        }
+        core.info(`Completed retrieving the 'buildEnvironment' within ${Date.now() - start}ms`);
+        return dependencyList.stdout;
+    });
+}
+exports.retrieveGradleBuildEnvironment = retrieveGradleBuildEnvironment;
 /**
  * Retrieves the `buildFile` `property` from a given `module` name in the configured gradle project.
  */
@@ -240,6 +262,7 @@ function run() {
         const gradleDependencyPath = core.getMultilineInput('gradle-dependency-path');
         let subModuleMode;
         const subModuleModeInput = core.getInput('sub-module-mode');
+        const includeBuildEnvironment = core.getBooleanInput('include-build-environment');
         // verify inputs are valid
         if (gradleProjectPath.length === 0) {
             core.debug(`No 'gradle-project-path' passed, using 'root'`);
@@ -288,6 +311,10 @@ function run() {
         for (let i = 0; i < length; i++) {
             const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i], gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode);
             manifests.push(...subManifests);
+        }
+        if (includeBuildEnvironment) {
+            const buildEnvironmentManifest = yield (0, process_1.prepareBuildEnvironmentManifest)(useGradlew, gradleProjectPath[0], undefined);
+            manifests.push(...buildEnvironmentManifest);
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
@@ -585,128 +612,156 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.processDependencyList = exports.processGradleGraph = exports.prepareDependencyManifest = void 0;
+exports.processBuildEnvironmentDependencyList = exports.processDependencyList = exports.prepareBuildEnvironmentManifest = exports.prepareDependencyManifest = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const parse_1 = __nccwpck_require__(5223);
 const path = __importStar(__nccwpck_require__(1017));
 const gradle_1 = __nccwpck_require__(0);
 const utils_1 = __nccwpck_require__(918);
+/**
+ * Retrieves the dependencies from gradle for the define dmodule and builds the Manifest for it.
+ */
 function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
-        const results = yield processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode);
+        const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode);
+        // inject the gradle dependency path into the root project
+        rootProject.dependencyPath = gradleDependencyPath;
+        // construct the Manifests
         const manifests = [];
-        for (const result of results) {
-            const { project, packageCache, directDependencies, indirectDependencies } = result;
-            let dependencyPath;
-            if (project.dependencyPath === undefined) {
-                const buildPath = yield (0, gradle_1.retrieveGradleBuildPath)(useGradlew, gradleProjectPath, project.name);
-                if (buildPath === undefined) {
-                    core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${project.name}`);
-                    throw new Error(`Failed to retrieve gradle build path.`);
-                }
-                else {
-                    dependencyPath = (0, utils_1.convertToRelativePath)(buildPath);
-                }
-            }
-            else {
-                dependencyPath = path.join(gradleProjectPath, project.dependencyPath);
-            }
-            core.startGroup(`📦️ Preparing Dependency Snapshot - '${project.name}'`);
-            let name = path.dirname(dependencyPath);
-            if (name === '.') {
-                // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
-                name = (yield (0, gradle_1.retrieveGradleProjectName)(useGradlew, gradleProjectPath)) || dependencyPath;
-            }
-            const manifest = new dependency_submission_toolkit_1.Manifest(name, dependencyPath);
-            core.info(`Connection ${directDependencies.length} direct dependencies`);
-            for (const pkgUrl of directDependencies) {
-                const dep = packageCache.lookupPackage(pkgUrl);
-                if (!dep) {
-                    core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`);
-                    throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache');
-                }
-                manifest.addDirectDependency(dep);
-            }
-            core.info(`Connection ${indirectDependencies.length} indirect dependencies`);
-            for (const pkgUrl of indirectDependencies) {
-                const dep = packageCache.lookupPackage(pkgUrl);
-                if (!dep) {
-                    core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`);
-                    throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache');
-                }
-                manifest.addIndirectDependency(dep);
-            }
-            core.endGroup();
-            manifests.push(manifest);
+        for (const result of transformProject(rootProject, subModuleMode)) {
+            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath));
         }
         return manifests;
     });
 }
 exports.prepareDependencyManifest = prepareDependencyManifest;
-function processGradleGraph(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode) {
+/**
+ * Retrieves the build environment from gradle and builds the Manifest for it.
+ */
+function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDependencyPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode);
+        const rootProject = yield processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath);
         // inject the gradle dependency path into the root project
         rootProject.dependencyPath = gradleDependencyPath;
-        const flattenedProjects = [];
-        flattenedProjects.push(rootProject);
-        if (subModuleMode === 'INDIVIDUAL' || subModuleMode === 'INDIVIDUAL_DEEP') {
-            // construct flattened projects array
-            flattenedProjects.push(...rootProject.projectRegistry);
+        // construct the Manifests
+        const manifests = [];
+        for (const result of transformProject(rootProject, 'COMBINED')) {
+            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath, 'buildEnvironment'));
         }
-        else if (subModuleMode === 'COMBINED') {
-            // merge all dependencies into the parent project, ommiting any child project.
-            for (const project of rootProject.projectRegistry) {
-                rootProject.packages.push(...project.packages);
-            }
-        }
-        else if (rootProject.projectRegistry.length !== 0) {
-            core.warning('The `sub-module-mode` was set to `IGNORE` but sub-modules were found. This should not happen, please report to the maintainer.');
-        }
-        const results = [];
-        for (const project of flattenedProjects) {
-            const dependencyList = project.packages;
-            /* add all direct and indirect packages to a new PackageCache */
-            const cache = new dependency_submission_toolkit_1.PackageCache();
-            const directDependencies = [];
-            const indirectDependencies = [];
-            for (const [parent, child] of dependencyList) {
-                cache.package(parent);
-                if (child !== undefined) {
-                    cache.package(child);
-                    indirectDependencies.push(child);
-                }
-                else {
-                    directDependencies.push(parent);
-                }
-            }
-            for (const [parent, child] of dependencyList) {
-                if (!child)
-                    continue; // we can only connect the child to the parent if it exists
-                /* Look up the parent package in the cache. go mod graph will return
-                 * multiple versions of packages with the same namespace and name. We
-                 * select only package versions used in the Go build target. */
-                const targetPackage = cache.lookupPackage(parent);
-                if (!targetPackage)
-                    continue;
-                const childPackage = cache.lookupPackage(child);
-                if (!childPackage)
-                    continue;
-                // create the dependency relationship
-                targetPackage.dependsOn(childPackage);
-            }
-            results.push({
-                project,
-                packageCache: cache,
-                directDependencies,
-                indirectDependencies
-            });
-        }
-        return results;
+        return manifests;
     });
 }
-exports.processGradleGraph = processGradleGraph;
+exports.prepareBuildEnvironmentManifest = prepareBuildEnvironmentManifest;
+/**
+ * Transforms the retrieved [Project] into the required format for
+ */
+function transformProject(rootProject, subModuleMode) {
+    const flattenedProjects = [];
+    flattenedProjects.push(rootProject);
+    if (subModuleMode === 'INDIVIDUAL' || subModuleMode === 'INDIVIDUAL_DEEP') {
+        // construct flattened projects array
+        flattenedProjects.push(...rootProject.projectRegistry);
+    }
+    else if (subModuleMode === 'COMBINED') {
+        // merge all dependencies into the parent project, ommiting any child project.
+        for (const project of rootProject.projectRegistry) {
+            rootProject.packages.push(...project.packages);
+        }
+    }
+    else if (rootProject.projectRegistry.length !== 0) {
+        core.warning('The `sub-module-mode` was set to `IGNORE` but sub-modules were found. This should not happen, please report to the maintainer.');
+    }
+    const results = [];
+    for (const project of flattenedProjects) {
+        const dependencyList = project.packages;
+        /* add all direct and indirect packages to a new PackageCache */
+        const cache = new dependency_submission_toolkit_1.PackageCache();
+        const directDependencies = [];
+        const indirectDependencies = [];
+        for (const [parent, child] of dependencyList) {
+            cache.package(parent);
+            if (child !== undefined) {
+                cache.package(child);
+                indirectDependencies.push(child);
+            }
+            else {
+                directDependencies.push(parent);
+            }
+        }
+        for (const [parent, child] of dependencyList) {
+            if (!child)
+                continue; // we can only connect the child to the parent if it exists
+            /* Look up the parent package in the cache. go mod graph will return
+             * multiple versions of packages with the same namespace and name. We
+             * select only package versions used in the Go build target. */
+            const targetPackage = cache.lookupPackage(parent);
+            if (!targetPackage)
+                continue;
+            const childPackage = cache.lookupPackage(child);
+            if (!childPackage)
+                continue;
+            // create the dependency relationship
+            targetPackage.dependsOn(childPackage);
+        }
+        results.push({
+            project,
+            packageCache: cache,
+            directDependencies,
+            indirectDependencies
+        });
+    }
+    return results;
+}
+/**
+ *
+ */
+function buildManifest(result, useGradlew, gradleProjectPath, manifestName = undefined) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { project, packageCache, directDependencies, indirectDependencies } = result;
+        let dependencyPath;
+        if (project.dependencyPath === undefined) {
+            const buildPath = yield (0, gradle_1.retrieveGradleBuildPath)(useGradlew, gradleProjectPath, project.name);
+            if (buildPath === undefined) {
+                core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${project.name}`);
+                throw new Error(`Failed to retrieve gradle build path.`);
+            }
+            else {
+                dependencyPath = (0, utils_1.convertToRelativePath)(buildPath);
+            }
+        }
+        else {
+            dependencyPath = path.join(gradleProjectPath, project.dependencyPath);
+        }
+        core.startGroup(`📦️ Preparing Dependency Snapshot - '${project.name}'`);
+        let name = manifestName || path.dirname(dependencyPath);
+        if (name === '.') {
+            // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
+            name = (yield (0, gradle_1.retrieveGradleProjectName)(useGradlew, gradleProjectPath)) || dependencyPath;
+        }
+        const manifest = new dependency_submission_toolkit_1.Manifest(name, dependencyPath);
+        core.info(`Connection ${directDependencies.length} direct dependencies`);
+        for (const pkgUrl of directDependencies) {
+            const dep = packageCache.lookupPackage(pkgUrl);
+            if (!dep) {
+                core.setFailed(`🚨 Missing direct dependency: ${pkgUrl}`);
+                throw new Error('assertion failed: expected all direct dependencies to have entries in PackageCache');
+            }
+            manifest.addDirectDependency(dep);
+        }
+        core.info(`Connection ${indirectDependencies.length} indirect dependencies`);
+        for (const pkgUrl of indirectDependencies) {
+            const dep = packageCache.lookupPackage(pkgUrl);
+            if (!dep) {
+                core.setFailed(`🚨 Missing indirect dependency: ${pkgUrl}`);
+                throw new Error('assertion failed: expected all indirect dependencies to have entries in PackageCache');
+            }
+            manifest.addIndirectDependency(dep);
+        }
+        core.endGroup();
+        return manifest;
+    });
+}
 function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode) {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`);
@@ -726,6 +781,15 @@ function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule,
     });
 }
 exports.processDependencyList = processDependencyList;
+function processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.startGroup(`🔨 Processing gradle buildEnvironment`);
+        const dependencyList = yield (0, gradle_1.retrieveGradleBuildEnvironment)(useGradlew, gradleProjectPath);
+        core.endGroup();
+        return (0, parse_1.parseGradleGraph)(':', dependencyList, 'IGNORE_SILENT');
+    });
+}
+exports.processBuildEnvironmentDependencyList = processBuildEnvironmentDependencyList;
 
 
 /***/ }),
