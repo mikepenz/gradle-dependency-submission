@@ -7,8 +7,12 @@ const DEPENDENCY_PROJECT = `project `
 const DEPENDENCY_PROJECT_START = `${DEPENDENCY_DEPENDENCY_LEVEL_START}${DEPENDENCY_PROJECT}`
 const DEPENDENCY_PROJECT_END = `${DEPENDENCY_DEPENDENCY_LEVEL_END}${DEPENDENCY_PROJECT}`
 const DEPENDENCY_CHILD_INSET = ['|    ', '     ']
+// (c) - dependency constraint
 const DEPENDENCY_CONSTRAINT = ' (c)'
+// (*) - dependencies omitted (listed previously)
 const DEPENDENCY_OMITTED = ' (*)'
+// (n) - Not resolved (configuration is not meant to be resolved)
+const DEPENDENCY_NOT_RESOLVED = ' (n)'
 const DEPENDENCY_LEVEL_INLINE = 5
 
 export function parseProjectSpecification(projectString: string, level = 0): Project {
@@ -45,7 +49,11 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
 
   let strippedLineEnd = lineEnd
 
-  if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) || lineEnd.endsWith(DEPENDENCY_OMITTED)) {
+  if (
+    lineEnd.endsWith(DEPENDENCY_CONSTRAINT) ||
+    lineEnd.endsWith(DEPENDENCY_OMITTED) ||
+    lineEnd.endsWith(DEPENDENCY_NOT_RESOLVED)
+  ) {
     strippedLineEnd = lineEnd.substring(0, lineEnd.length - 4)
   }
   const endParts = strippedLineEnd.trim().split(' -> ')

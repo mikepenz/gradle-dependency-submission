@@ -66,3 +66,12 @@ jobs:
           gradle-build-configuration-mapping: |-
             :library-child-2|compileClasspath
           sub-module-mode: 'INDIVIDUAL_DEEP'
+
+      - name: Test Multi Module Project in subfolder - Without configuration filter
+        uses: ./
+        with:
+          gradle-project-path: |-
+            gradle-example
+          gradle-build-module: |-
+            :app
+          sub-module-mode: 'INDIVIDUAL_DEEP'

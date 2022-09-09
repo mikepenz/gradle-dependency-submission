@@ -94,16 +94,19 @@ function transformProject(
 
     /* add all direct and indirect packages to a new PackageCache */
     const cache = new PackageCache()
-    const directDependencies: PackageURL[] = []
-    const indirectDependencies: PackageURL[] = []
+    const directDependencies: Set<PackageURL> = new Set()
+    const indirectDependencies: Set<PackageURL> = new Set()
 
     for (const [parent, child] of dependencyList) {
-      cache.package(parent)
+      // as the `Set` does comparison by reference - ensure we use the same package (and packageURL) object
+      // if a specific `PackageURL` did already exist in the cache - use this object
+      // this eliminates potential duplicates
+      const parentPackage = cache.package(parent)
       if (child !== undefined) {
-        cache.package(child)
-        indirectDependencies.push(child)
+        const childPackage = cache.package(child)
+        indirectDependencies.add(childPackage.packageURL)
       } else {
-        directDependencies.push(parent)
+        directDependencies.add(parentPackage.packageURL)
       }
     }
 
@@ -117,13 +120,16 @@ function transformProject(
       const childPackage = cache.lookupPackage(child)
       if (!childPackage) continue
       // create the dependency relationship
-      targetPackage.dependsOn(childPackage)
+      if (!targetPackage.dependencies.includes(childPackage)) {
+        targetPackage.dependsOn(childPackage)
+      }
     }
+
     results.push({
       project,
       packageCache: cache,
-      directDependencies,
-      indirectDependencies
+      directDependencies: Array.from(directDependencies.values()),
+      indirectDependencies: Array.from(indirectDependencies.values())
     })
   }
   return results

@@ -104,18 +104,34 @@ function retrieveGradleDependencies(useGradlew, gradleProjectPath, gradleBuildMo
         const start = Date.now();
         const command = retrieveGradleCLI(useGradlew);
         const module = verifyModule(gradleBuildModule);
-        const dependencyList = yield exec.getExecOutput(command, [`--console`, `plain`, `${module}:dependencies`, '--configuration', gradleBuildConfiguration], {
-            cwd: gradleProjectPath,
-            silent: !core.isDebug(),
-            ignoreReturnCode: true
-        });
-        if (dependencyList.exitCode !== 0) {
-            core.error(dependencyList.stderr);
-            core.setFailed(`'${command} ${module}:dependencies' resolution failed!`);
-            throw new Error(`Failed to execute '${command} ${module}:dependencies'`);
+        if (gradleBuildConfiguration !== undefined && gradleBuildConfiguration !== '') {
+            const dependencyList = yield exec.getExecOutput(command, [`--console`, `plain`, `${module}:dependencies`, '--configuration', gradleBuildConfiguration], {
+                cwd: gradleProjectPath,
+                silent: !core.isDebug(),
+                ignoreReturnCode: true
+            });
+            if (dependencyList.exitCode !== 0) {
+                core.error(dependencyList.stderr);
+                core.setFailed(`'${command} ${module}:dependencies --configuration ${gradleBuildConfiguration}' resolution failed!`);
+                throw new Error(`Failed to execute '${command} ${module}:dependencies --configuration ${gradleBuildConfiguration}'`);
+            }
+            core.info(`Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${Date.now() - start}ms`);
+            return dependencyList.stdout;
         }
-        core.info(`Completed retrieving the 'dependencies' for configuration '${gradleBuildConfiguration}' within ${Date.now() - start}ms`);
-        return dependencyList.stdout;
+        else {
+            const dependencyList = yield exec.getExecOutput(command, [`--console`, `plain`, `${module}:dependencies`], {
+                cwd: gradleProjectPath,
+                silent: !core.isDebug(),
+                ignoreReturnCode: true
+            });
+            if (dependencyList.exitCode !== 0) {
+                core.error(dependencyList.stderr);
+                core.setFailed(`'${command} ${module}:dependencies resolution failed!`);
+                throw new Error(`Failed to execute '${command} ${module}:dependencies'`);
+            }
+            core.info(`Completed retrieving the 'dependencies' within ${Date.now() - start}ms`);
+            return dependencyList.stdout;
+        }
     });
 }
 exports.retrieveGradleDependencies = retrieveGradleDependencies;
@@ -273,9 +289,12 @@ function run() {
             gradleBuildModule = [':'];
         }
         const length = gradleBuildModule.length;
-        if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
-            core.setFailed('When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1');
+        if (gradleProjectPath.length !== 1 && gradleProjectPath.length !== length) {
+            core.setFailed('When passing multiple modules (`gradle-build-module`), the `gradle-project-path` inputs must have the same amount of items or exactly 1');
             return;
+        }
+        else if (gradleBuildConfiguration.length > 1 && gradleBuildConfiguration.length !== length) {
+            core.setFailed('When passing the `gradle-build-configuration`, this input must have the same amount of items as the `gradle-build-module` or exactly 1');
         }
         else if (gradleDependencyPath.length !== 0 && gradleDependencyPath.length !== length) {
             core.setFailed('When passing the `gradle-dependency-path`, this input must have the same amount of items as the `gradle-build-module` or none');
@@ -309,7 +328,12 @@ function run() {
         core.endGroup();
         const manifests = [];
         for (let i = 0; i < length; i++) {
-            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i], gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode);
+            // if no gradleBuildConfiguration was defined -> execute unfiltered
+            // if 1 gradleBuildConfiguration was defined -> use it for all
+            // else -> use the config for the given item
+            const gbcl = gradleBuildConfiguration.length;
+            const configuration = gbcl === 0 ? '' : gbcl === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i];
+            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], configuration, gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode);
             manifests.push(...subManifests);
         }
         if (includeBuildEnvironment) {
@@ -321,7 +345,7 @@ function run() {
             url: 'https://github.com/mikepenz/gradle-dependency-submission',
             version: '0.7.2'
         }, github.context, {
-            correlator: `${github.context.job}-${gradleBuildModule.join('-')}-${gradleBuildConfiguration}`,
+            correlator: `${github.context.job}-${gradleBuildModule.join('_')}-${gradleBuildConfiguration.join('_')}`,
             id: github.context.runId.toString()
         });
         for (const manifest of manifests) {
@@ -374,8 +398,12 @@ const DEPENDENCY_PROJECT = `project `;
 const DEPENDENCY_PROJECT_START = `${DEPENDENCY_DEPENDENCY_LEVEL_START}${DEPENDENCY_PROJECT}`;
 const DEPENDENCY_PROJECT_END = `${DEPENDENCY_DEPENDENCY_LEVEL_END}${DEPENDENCY_PROJECT}`;
 const DEPENDENCY_CHILD_INSET = ['|    ', '     '];
+// (c) - dependency constraint
 const DEPENDENCY_CONSTRAINT = ' (c)';
+// (*) - dependencies omitted (listed previously)
 const DEPENDENCY_OMITTED = ' (*)';
+// (n) - Not resolved (configuration is not meant to be resolved)
+const DEPENDENCY_NOT_RESOLVED = ' (n)';
 const DEPENDENCY_LEVEL_INLINE = 5;
 function parseProjectSpecification(projectString, level = 0) {
     const stripped = projectString.substring((level + 1) * DEPENDENCY_LEVEL_INLINE + DEPENDENCY_PROJECT.length).trimEnd();
@@ -415,7 +443,9 @@ function parseGradlePackage(pkg, level = 0) {
         [packageName, libraryName, lineEnd] = split;
     }
     let strippedLineEnd = lineEnd;
-    if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) || lineEnd.endsWith(DEPENDENCY_OMITTED)) {
+    if (lineEnd.endsWith(DEPENDENCY_CONSTRAINT) ||
+        lineEnd.endsWith(DEPENDENCY_OMITTED) ||
+        lineEnd.endsWith(DEPENDENCY_NOT_RESOLVED)) {
         strippedLineEnd = lineEnd.substring(0, lineEnd.length - 4);
     }
     const endParts = strippedLineEnd.trim().split(' -> ');
@@ -677,16 +707,19 @@ function transformProject(rootProject, subModuleMode) {
         const dependencyList = project.packages;
         /* add all direct and indirect packages to a new PackageCache */
         const cache = new dependency_submission_toolkit_1.PackageCache();
-        const directDependencies = [];
-        const indirectDependencies = [];
+        const directDependencies = new Set();
+        const indirectDependencies = new Set();
         for (const [parent, child] of dependencyList) {
-            cache.package(parent);
+            // as the `Set` does comparison by reference - ensure we use the same package (and packageURL) object
+            // if a specific `PackageURL` did already exist in the cache - use this object
+            // this eliminates potential duplicates
+            const parentPackage = cache.package(parent);
             if (child !== undefined) {
-                cache.package(child);
-                indirectDependencies.push(child);
+                const childPackage = cache.package(child);
+                indirectDependencies.add(childPackage.packageURL);
             }
             else {
-                directDependencies.push(parent);
+                directDependencies.add(parentPackage.packageURL);
             }
         }
         for (const [parent, child] of dependencyList) {
@@ -702,13 +735,15 @@ function transformProject(rootProject, subModuleMode) {
             if (!childPackage)
                 continue;
             // create the dependency relationship
-            targetPackage.dependsOn(childPackage);
+            if (!targetPackage.dependencies.includes(childPackage)) {
+                targetPackage.dependsOn(childPackage);
+            }
         }
         results.push({
             project,
             packageCache: cache,
-            directDependencies,
-            indirectDependencies
+            directDependencies: Array.from(directDependencies.values()),
+            indirectDependencies: Array.from(indirectDependencies.values())
         });
     }
     return results;

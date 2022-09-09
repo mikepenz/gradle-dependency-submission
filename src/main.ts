@@ -27,11 +27,15 @@ async function run(): Promise<void> {
   }
 
   const length = gradleBuildModule.length
-  if ([gradleProjectPath, gradleBuildConfiguration].some(x => x.length !== 1 && x.length !== length)) {
+  if (gradleProjectPath.length !== 1 && gradleProjectPath.length !== length) {
     core.setFailed(
-      'When passing multiple modules (`gradle-build-module`), all inputs must have the same amount of items or exactly 1'
+      'When passing multiple modules (`gradle-build-module`), the `gradle-project-path` inputs must have the same amount of items or exactly 1'
     )
     return
+  } else if (gradleBuildConfiguration.length > 1 && gradleBuildConfiguration.length !== length) {
+    core.setFailed(
+      'When passing the `gradle-build-configuration`, this input must have the same amount of items as the `gradle-build-module` or exactly 1'
+    )
   } else if (gradleDependencyPath.length !== 0 && gradleDependencyPath.length !== length) {
     core.setFailed(
       'When passing the `gradle-dependency-path`, this input must have the same amount of items as the `gradle-build-module` or none'
@@ -66,11 +70,17 @@ async function run(): Promise<void> {
 
   const manifests: Manifest[] = []
   for (let i = 0; i < length; i++) {
+    // if no gradleBuildConfiguration was defined -> execute unfiltered
+    // if 1 gradleBuildConfiguration was defined -> use it for all
+    // else -> use the config for the given item
+    const gbcl = gradleBuildConfiguration.length
+    const configuration = gbcl === 0 ? '' : gbcl === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i]
+
     const subManifests = await prepareDependencyManifest(
       useGradlew,
       gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i],
       gradleBuildModule[i],
-      gradleBuildConfiguration.length === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i],
+      configuration,
       gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined,
       moduleBuildConfigurations,
       subModuleMode
@@ -91,7 +101,7 @@ async function run(): Promise<void> {
     },
     github.context,
     {
-      correlator: `${github.context.job}-${gradleBuildModule.join('-')}-${gradleBuildConfiguration}`,
+      correlator: `${github.context.job}-${gradleBuildModule.join('_')}-${gradleBuildConfiguration.join('_')}`,
       id: github.context.runId.toString()
     }
   )

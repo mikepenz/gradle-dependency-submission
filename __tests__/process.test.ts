@@ -1,6 +1,6 @@
-import {jest, describe, test, expect} from '@jest/globals'
-import {prepareDependencyManifest, processBuildEnvironmentDependencyList, processDependencyList} from '../src/process'
-import {BUILD_ENVIRONMENT_EXPECTED_OUTPUT} from './expected_build_env_results'
+import { jest, describe, test, expect } from '@jest/globals'
+import { prepareDependencyManifest, processBuildEnvironmentDependencyList, processDependencyList } from '../src/process'
+import { BUILD_ENVIRONMENT_EXPECTED_OUTPUT } from './expected_build_env_results'
 import {
   EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL,
   EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED,
@@ -8,6 +8,7 @@ import {
   EXPECTED_GRADLE_DEPENDENCY_OUTPUT,
   EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT
 } from './expected_dependency_results'
+import { EXPECTED_GRADLE_DEPENDENCY_UNFILTERED } from './expected_dependency_results_unfiltered'
 
 jest.setTimeout(240000)
 
@@ -41,7 +42,7 @@ describe('processDependencyList', () => {
     try {
       await processDependencyList(true, 'gradle-example', ':app', 'non-existing', new Map<string, string>(), 'IGNORE')
     } catch (error: any) {
-      expect(error.message).toEqual("Failed to execute './gradlew :app:dependencies'")
+      expect(error.message).toEqual("Failed to execute './gradlew :app:dependencies --configuration non-existing'")
     }
   })
 
@@ -51,7 +52,9 @@ describe('processDependencyList', () => {
     expect(dependencies).toHaveLength(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT)
   })
+})
 
+describe('prepareDependencyManifest', () => {
   test('run in gradle-example with nested modules - IGNORE', async () => {
     const manifests = await prepareDependencyManifest(
       true,
@@ -92,5 +95,20 @@ describe('processDependencyList', () => {
     )
     expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL.length)
     expect(manifests).toEqual(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL)
+  })
+
+  test('run unfiltered configuration in gradle-example', async () => {
+    const manifest = await prepareDependencyManifest(
+      true,
+      'gradle-example',
+      ':app',
+      "",
+      undefined,
+      new Map<string, string>(),
+      'IGNORE'
+    )
+
+    expect(manifest).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED.length)
+    expect(JSON.stringify(manifest)).toEqual(JSON.stringify(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED))
   })
 })
