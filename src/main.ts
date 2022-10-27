@@ -97,7 +97,7 @@ async function run(): Promise<void> {
     {
       name: 'mikepenz/gradle-dependency-submission',
       url: 'https://github.com/mikepenz/gradle-dependency-submission',
-      version: '0.8.0'
+      version: '0.8.1'
     },
     github.context,
     {
