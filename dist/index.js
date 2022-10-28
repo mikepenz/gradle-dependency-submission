@@ -430,8 +430,14 @@ function parseGradlePackage(pkg, level = 0) {
             [libraryName, lineEnd] = secondaryParts;
         }
         else {
-            core.error(`Could not parse package: '${pkg}' (1)`);
-            throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+            if (split[1].trim().endsWith(DEPENDENCY_NOT_RESOLVED)) {
+                core.warning(`Discovered unresolved dependency: ${pkg}`);
+                libraryName = split[1].trim().replace(DEPENDENCY_NOT_RESOLVED, '');
+            }
+            else {
+                core.error(`Could not parse package: '${pkg}' (1)`);
+                throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+            }
         }
     }
     else if (split.length < 3) {
