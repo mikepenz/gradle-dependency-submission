@@ -3,6 +3,7 @@ import {parseGradleGraph} from '../src/parse'
 import fs from 'fs'
 import {
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT,
+  GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED,
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING,
   GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT
 } from './expected_dependency_results'
@@ -24,6 +25,30 @@ debugCompileClasspath - Compile classpath for compilation 'debug' (target  (andr
 +--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:{strictly 1.6.10} -> 1.6.10 (c)
 +--- org.jetbrains.kotlin:kotlin-stdlib:{strictly 1.6.10} -> 1.6.10 (c)
 +--- org.jetbrains.kotlin:kotlin-stdlib-jdk7:{strictly 1.6.10} -> 1.6.10 (c)
++--- org.jetbrains:annotations:{strictly 13.0} -> 13.0 (c)
+\\--- org.jetbrains.kotlin:kotlin-stdlib-common:{strictly 1.6.10} -> 1.6.10 (c)
+
+(c) - dependency constraint
+(*) - dependencies omitted (listed previously)
+
+A web-based, searchable dependency report is available by adding the --scan option.
+
+BUILD SUCCESSFUL in 555ms
+1 actionable task: 1 executed`
+
+
+const GRADLE_DEPENDENCY_OUTPUT_UNRESOLVED = `
+> Task :app:dependencies
+
+------------------------------------------------------------
+Project ':app'
+------------------------------------------------------------
+
+debugCompileClasspath - Compile classpath for compilation 'debug' (target  (androidJvm)).
++--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10
+|    +--- org.jetbrains.kotlin:kotlin-stdlib:1.6.10
+|    |    +--- org.jetbrains:annotations:13.0
+|    |    \\--- org.projectlombok:lombok (n)
 +--- org.jetbrains:annotations:{strictly 13.0} -> 13.0 (c)
 \\--- org.jetbrains.kotlin:kotlin-stdlib-common:{strictly 1.6.10} -> 1.6.10 (c)
 
@@ -75,6 +100,13 @@ describe('parseGradleDependencyOutput', () => {
 
     expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT)
+  })
+
+  test('parses output of gradle dependency command with unresolved dependencies', () => {
+    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_UNRESOLVED).packages
+
+    expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED.length)
+    expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED)
   })
 
   test('parses output of gradle dependency command with bom into dependencies', () => {
