@@ -4689,6 +4689,57 @@ export const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED = [
   ],
 ]
 
+
+export const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED = [
+  [
+    {
+      type: "maven",
+      name: "kotlin-stdlib-jdk8",
+      namespace: "org.jetbrains.kotlin",
+      version: "1.6.10",
+      qualifiers: null,
+      subpath: null,
+    },
+    {
+      type: "maven",
+      name: "kotlin-stdlib",
+      namespace: "org.jetbrains.kotlin",
+      version: "1.6.10",
+      qualifiers: null,
+      subpath: null,
+    },
+  ],
+  [
+    {
+      type: "maven",
+      name: "kotlin-stdlib",
+      namespace: "org.jetbrains.kotlin",
+      version: "1.6.10",
+      qualifiers: null,
+      subpath: null,
+    },
+    {
+      type: "maven",
+      name: "annotations",
+      namespace: "org.jetbrains",
+      version: "13.0",
+      qualifiers: null,
+      subpath: null,
+    },
+  ],
+  [
+    {
+      type: "maven",
+      name: "kotlin-stdlib-jdk8",
+      namespace: "org.jetbrains.kotlin",
+      version: "1.6.10",
+      qualifiers: null,
+      subpath: null,
+    },
+    undefined,
+  ],
+]
+
 export const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING = [
   [
     {
