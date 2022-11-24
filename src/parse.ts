@@ -25,7 +25,7 @@ export function parseProjectSpecification(projectString: string, level = 0): Pro
  *
  * Identifies variant of specification (full maven spec or without version (if bom file is used)).
  */
-export function parseGradlePackage(pkg: string, level = 0): PackageURL {
+export function parseGradlePackage(pkg: string, level = 0): PackageURL | undefined {
   const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd()
   const split = stripped.split(':')
   let packageName = ''
@@ -38,16 +38,19 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL {
       ;[libraryName, lineEnd] = secondaryParts
     } else {
       if (split[1].trim().endsWith(DEPENDENCY_NOT_RESOLVED)) {
-        core.warning(`Discovered unresolved dependency: ${pkg}`)
+        core.warning(`Discovered unresolved dependency: ${stripped}`)
         libraryName = split[1].trim().replace(DEPENDENCY_NOT_RESOLVED, '')
       } else {
-        core.error(`Could not parse package: '${pkg}' (1)`)
-        throw Error(`The given '${pkg} can't be parsed as a gradle package.`)
+        core.error(`Could not parse package: '${stripped}' (1)`)
+        throw Error(`The given '${stripped} can't be parsed as a gradle package.`)
       }
     }
+  } else if (split.length === 1 && stripped.trim().endsWith(DEPENDENCY_NOT_RESOLVED)) {
+    core.warning(`Could not parse unresolved package: '${stripped}' (3)`)
+    return undefined
   } else if (split.length < 3) {
-    core.error(`Could not parse package: '${pkg}' (2)`)
-    throw Error(`The given '${pkg} can't be parsed as a gradle package.`)
+    core.error(`Could not parse package: '${stripped}' (2)`)
+    throw Error(`The given '${stripped} can't be parsed as a gradle package.`)
   } else {
     ;[packageName, libraryName, lineEnd] = split
   }
@@ -159,12 +162,14 @@ function parseGradleDependency(
       }
 
       const parent = parseGradlePackage(line, level)
-      if (parentParent) {
-        project.packages.push([parentParent, parent])
-      }
-      parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode)
-      if (level === 0 || !parentParent) {
-        project.packages.push([parent, undefined])
+      if(parent) {
+        if (parentParent) {
+          project.packages.push([parentParent, parent])
+        }
+        parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode)
+        if (level === 0 || !parentParent) {
+          project.packages.push([parent, undefined])
+        }
       }
     } else if (
       strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||

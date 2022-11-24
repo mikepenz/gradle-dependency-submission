@@ -5,7 +5,8 @@ import {
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT,
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED,
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING,
-  GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT
+  GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT,
+  GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED
 } from './expected_dependency_results'
 
 const GRADLE_DEPENDENCY_OUTPUT = `
@@ -60,6 +61,31 @@ A web-based, searchable dependency report is available by adding the --scan opti
 BUILD SUCCESSFUL in 555ms
 1 actionable task: 1 executed`
 
+
+const GRADLE_DEPENDENCY_OUTPUT_UNSPECIFIED = `
+> Task :app:dependencies
+
+------------------------------------------------------------
+Project ':app'
+------------------------------------------------------------
+
+debugCompileClasspath - Compile classpath for compilation 'debug' (target  (androidJvm)).
++--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10
+|    +--- org.jetbrains.kotlin:kotlin-stdlib:1.6.10
+|    |    +--- org.jetbrains:annotations:13.0
+|    |    \\--- unspecified (n)
++--- org.jetbrains:annotations:{strictly 13.0} -> 13.0 (c)
+\\--- org.jetbrains.kotlin:kotlin-stdlib-common:{strictly 1.6.10} -> 1.6.10 (c)
+
+(c) - dependency constraint
+(*) - dependencies omitted (listed previously)
+
+A web-based, searchable dependency report is available by adding the --scan option.
+
+BUILD SUCCESSFUL in 555ms
+1 actionable task: 1 executed`
+
+
 const GRADLE_DEPENDENCY_OUTPUT_SPRING = `
 Type-safe dependency accessors is an incubating feature.
 
@@ -107,6 +133,13 @@ describe('parseGradleDependencyOutput', () => {
 
     expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED.length)
     expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED)
+  })
+
+  test('parses output of gradle dependency command with unspecified dependencies', () => {
+    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_UNSPECIFIED).packages
+
+    expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED.length)
+    expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED)
   })
 
   test('parses output of gradle dependency command with bom into dependencies', () => {

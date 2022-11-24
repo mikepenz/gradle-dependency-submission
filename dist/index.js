@@ -431,18 +431,22 @@ function parseGradlePackage(pkg, level = 0) {
         }
         else {
             if (split[1].trim().endsWith(DEPENDENCY_NOT_RESOLVED)) {
-                core.warning(`Discovered unresolved dependency: ${pkg}`);
+                core.warning(`Discovered unresolved dependency: ${stripped}`);
                 libraryName = split[1].trim().replace(DEPENDENCY_NOT_RESOLVED, '');
             }
             else {
-                core.error(`Could not parse package: '${pkg}' (1)`);
-                throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+                core.error(`Could not parse package: '${stripped}' (1)`);
+                throw Error(`The given '${stripped} can't be parsed as a gradle package.`);
             }
         }
     }
+    else if (split.length === 1 && stripped.trim().endsWith(DEPENDENCY_NOT_RESOLVED)) {
+        core.warning(`Could not parse unresolved package: '${stripped}' (3)`);
+        return undefined;
+    }
     else if (split.length < 3) {
-        core.error(`Could not parse package: '${pkg}' (2)`);
-        throw Error(`The given '${pkg} can't be parsed as a gradle package.`);
+        core.error(`Could not parse package: '${stripped}' (2)`);
+        throw Error(`The given '${stripped} can't be parsed as a gradle package.`);
     }
     else {
         ;
@@ -536,12 +540,14 @@ function parseGradleDependency(rootProject, project, iterator, parentParent, lev
                 continue; // ignore constraints at the root level
             }
             const parent = parseGradlePackage(line, level);
-            if (parentParent) {
-                project.packages.push([parentParent, parent]);
-            }
-            parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode);
-            if (level === 0 || !parentParent) {
-                project.packages.push([parent, undefined]);
+            if (parent) {
+                if (parentParent) {
+                    project.packages.push([parentParent, parent]);
+                }
+                parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode);
+                if (level === 0 || !parentParent) {
+                    project.packages.push([parent, undefined]);
+                }
             }
         }
         else if (strippedLine.startsWith(DEPENDENCY_CHILD_INSET[0]) ||
