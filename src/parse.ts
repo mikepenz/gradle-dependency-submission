@@ -162,7 +162,7 @@ function parseGradleDependency(
       }
 
       const parent = parseGradlePackage(line, level)
-      if(parent) {
+      if (parent) {
         if (parentParent) {
           project.packages.push([parentParent, parent])
         }

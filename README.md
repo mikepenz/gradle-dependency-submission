@@ -119,6 +119,7 @@ The following example showcases a gradle module in the root, without a module na
 | `gradle-dependency-path`    | Defines the path to the gradle dependency file, relative to the `gradle-project-path`. If not provided, automatically resolved via gradle and the `module` config. |
 | `sub-module-mode`  | Defines how the action handles sub projects/modules. Possible options `IGNORE`, `COMBINED`, `INDIVIDUAL`, `INDIVIDUAL_DEEP`. Default: `IGNORE`. |
 | `include-build-environment`  | Optional mode to enable the submission of the `buildEnvironment` as individual Manifest via the dependency submission API. Default: `false`. |
+| `correlator`  | 'Optional correlator string to submit to GitHub to identify the dependency submission.  Defaults to generating based on gradle-build-module and gradle-build-configuration.' |
 
 | **sub-module-mode**      |    **Description**           |
 | ----- | ---- |
