@@ -14,6 +14,7 @@ async function run(): Promise<void> {
   let subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
   const subModuleModeInput = core.getInput('sub-module-mode')
   const includeBuildEnvironment = core.getBooleanInput('include-build-environment')
+  let correlator = core.getInput('correlator')
 
   // verify inputs are valid
   if (gradleProjectPath.length === 0) {
@@ -66,6 +67,10 @@ async function run(): Promise<void> {
     core.debug(` will use build configuration ${configuration} for ${module}`)
   }
 
+  if (correlator === '') {
+    correlator = `${github.context.job}-${gradleBuildModule.join('_')}-${gradleBuildConfiguration.join('_')}`
+  }
+
   core.endGroup()
 
   const manifests: Manifest[] = []
@@ -101,7 +106,7 @@ async function run(): Promise<void> {
     },
     github.context,
     {
-      correlator: `${github.context.job}-${gradleBuildModule.join('_')}-${gradleBuildConfiguration.join('_')}`,
+      correlator,
       id: github.context.runId.toString()
     }
   )

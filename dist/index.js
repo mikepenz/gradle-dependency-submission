@@ -279,6 +279,7 @@ function run() {
         let subModuleMode;
         const subModuleModeInput = core.getInput('sub-module-mode');
         const includeBuildEnvironment = core.getBooleanInput('include-build-environment');
+        let correlator = core.getInput('correlator');
         // verify inputs are valid
         if (gradleProjectPath.length === 0) {
             core.debug(`No 'gradle-project-path' passed, using 'root'`);
@@ -325,6 +326,9 @@ function run() {
             moduleBuildConfigurations.set(module, configuration);
             core.debug(` will use build configuration ${configuration} for ${module}`);
         }
+        if (correlator === '') {
+            correlator = `${github.context.job}-${gradleBuildModule.join('_')}-${gradleBuildConfiguration.join('_')}`;
+        }
         core.endGroup();
         const manifests = [];
         for (let i = 0; i < length; i++) {
@@ -345,7 +349,7 @@ function run() {
             url: 'https://github.com/mikepenz/gradle-dependency-submission',
             version: '0.8.2'
         }, github.context, {
-            correlator: `${github.context.job}-${gradleBuildModule.join('_')}-${gradleBuildConfiguration.join('_')}`,
+            correlator,
             id: github.context.runId.toString()
         });
         for (const manifest of manifests) {

@@ -39,6 +39,10 @@ inputs:
     required: false
     description: 'Optional mode to also submit the `buildEnvironment` to the dependency submission API. This will execute the `buildEnvironment` task on the root module.'
     default: 'false'
+  correlator:
+    required: false
+    description: 'Optional correlator string to submit to GitHub to identify the dependency submission.  Defaults to generating based on gradle-build-module and gradle-build-configuration.'
+    default: ''
 runs:
   using: 'node16'
   main: 'dist/index.js'
