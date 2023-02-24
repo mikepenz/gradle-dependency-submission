@@ -206,6 +206,7 @@ export async function processDependencyList(
     gradleBuildModule,
     moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration
   )
+  core.debug("${gradleBuildModule} module dependencies: ${dependencyList}")
   core.endGroup()
   const rootProject = parseGradleGraph(gradleBuildModule, dependencyList, subModuleMode)
 
@@ -218,6 +219,7 @@ export async function processDependencyList(
         project.name,
         moduleBuildConfiguration.get(project.name) || gradleBuildConfiguration
       )
+      core.debug("${project.name} module dependencies: ${dependencyList}")
       const subProject = parseGradleGraph(project.name, subDependencyList, 'IGNORE_SILENT')
       project.packages.push(...subProject.packages)
       core.endGroup()
