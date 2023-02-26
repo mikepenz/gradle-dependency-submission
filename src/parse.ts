@@ -25,7 +25,7 @@ export function parseProjectSpecification(projectString: string, level = 0): Pro
  *
  * Identifies variant of specification (full maven spec or without version (if bom file is used)).
  */
-export function parseGradlePackage(pkg: string, level = 0): PackageURL | undefined {
+export function parseGradlePackage(pkg: string, level = 0, failOnError: boolean): PackageURL | undefined {
   const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd()
   const split = stripped.split(':')
   let packageName = ''
@@ -42,7 +42,11 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL | undefin
         libraryName = split[1].trim().replace(DEPENDENCY_NOT_RESOLVED, '')
       } else {
         core.error(`Could not parse package: '${stripped}' (1)`)
-        throw Error(`The given '${stripped} can't be parsed as a gradle package.`)
+        if (failOnError) {
+          throw Error(`The given '${stripped} can't be parsed as a gradle package.`)
+        } else {
+          return undefined
+        }
       }
     }
   } else if (split.length === 1 && stripped.trim().endsWith(DEPENDENCY_NOT_RESOLVED)) {
@@ -50,7 +54,11 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL | undefin
     return undefined
   } else if (split.length < 3) {
     core.error(`Could not parse package: '${stripped}' (2)`)
-    throw Error(`The given '${stripped} can't be parsed as a gradle package.`)
+    if (failOnError) {
+      throw Error(`The given '${stripped} can't be parsed as a gradle package.`)
+    } else {
+      return undefined
+    }
   } else {
     ;[packageName, libraryName, lineEnd] = split
   }
@@ -80,7 +88,8 @@ export function parseGradlePackage(pkg: string, level = 0): PackageURL | undefin
 export function parseGradleGraph(
   gradleBuildModule: string,
   contents: string,
-  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT' = 'IGNORE'
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT',
+  failOnError: boolean
 ): RootProject {
   const start = Date.now()
   core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`)
@@ -101,7 +110,7 @@ export function parseGradleGraph(
   }
 
   // parse dependency tree
-  parseGradleDependency(rootProject, rootProject, linesIterator, undefined, 0, subModuleMode)
+  parseGradleDependency(rootProject, rootProject, linesIterator, undefined, 0, subModuleMode, failOnError)
   core.info(`Completed parsing ${rootProject.packages.length} dependency associations within ${Date.now() - start}ms`)
   core.endGroup()
   return rootProject
@@ -116,7 +125,8 @@ function parseGradleDependency(
   iterator: PeekingIterator<string>,
   parentParent: PackageURL | undefined,
   level = 0,
-  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT'
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE' | 'IGNORE_SILENT',
+  failOnError: boolean
 ): void {
   // check if we are either at the end, or if we are not within a sub dependency
   let peekedLine = iterator.peek()?.trimEnd() // don't trim start (or it could kick away child insets)
@@ -148,7 +158,7 @@ function parseGradleDependency(
         core.debug(`Found a project dependency, skipping (Currently not supported) - ${line}`)
       } else {
         const childProject = rootProject.getOrRegisterProject(parseProjectSpecification(line, level)) // register new child project with root
-        parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode)
+        parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode, failOnError)
         project.childProjects.push(childProject) // register child project with parent project to retain hierarchy
         core.info(`Found a child project dependency: ${childProject.name}`)
       }
@@ -161,12 +171,12 @@ function parseGradleDependency(
         continue // ignore constraints at the root level
       }
 
-      const parent = parseGradlePackage(line, level)
+      const parent = parseGradlePackage(line, level, failOnError)
       if (parent) {
         if (parentParent) {
           project.packages.push([parentParent, parent])
         }
-        parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode)
+        parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode, failOnError)
         if (level === 0 || !parentParent) {
           project.packages.push([parent, undefined])
         }
