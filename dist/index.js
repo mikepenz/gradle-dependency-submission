@@ -279,6 +279,7 @@ function run() {
         let subModuleMode;
         const subModuleModeInput = core.getInput('sub-module-mode');
         const includeBuildEnvironment = core.getBooleanInput('include-build-environment');
+        const failOnError = core.getBooleanInput('fail-on-error');
         let correlator = core.getInput('correlator');
         // verify inputs are valid
         if (gradleProjectPath.length === 0) {
@@ -337,11 +338,11 @@ function run() {
             // else -> use the config for the given item
             const gbcl = gradleBuildConfiguration.length;
             const configuration = gbcl === 0 ? '' : gbcl === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i];
-            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], configuration, gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode);
+            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], configuration, gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode, failOnError);
             manifests.push(...subManifests);
         }
         if (includeBuildEnvironment) {
-            const buildEnvironmentManifest = yield (0, process_1.prepareBuildEnvironmentManifest)(useGradlew, gradleProjectPath[0], undefined);
+            const buildEnvironmentManifest = yield (0, process_1.prepareBuildEnvironmentManifest)(useGradlew, gradleProjectPath[0], undefined, failOnError);
             manifests.push(...buildEnvironmentManifest);
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
@@ -420,7 +421,7 @@ exports.parseProjectSpecification = parseProjectSpecification;
  *
  * Identifies variant of specification (full maven spec or without version (if bom file is used)).
  */
-function parseGradlePackage(pkg, level = 0) {
+function parseGradlePackage(pkg, level = 0, failOnError) {
     const stripped = pkg.substring((level + 1) * DEPENDENCY_LEVEL_INLINE).trimEnd();
     const split = stripped.split(':');
     let packageName = '';
@@ -440,7 +441,12 @@ function parseGradlePackage(pkg, level = 0) {
             }
             else {
                 core.error(`Could not parse package: '${stripped}' (1)`);
-                throw Error(`The given '${stripped} can't be parsed as a gradle package.`);
+                if (failOnError) {
+                    throw Error(`The given '${stripped} can't be parsed as a gradle package.`);
+                }
+                else {
+                    return undefined;
+                }
             }
         }
     }
@@ -450,7 +456,12 @@ function parseGradlePackage(pkg, level = 0) {
     }
     else if (split.length < 3) {
         core.error(`Could not parse package: '${stripped}' (2)`);
-        throw Error(`The given '${stripped} can't be parsed as a gradle package.`);
+        if (failOnError) {
+            throw Error(`The given '${stripped} can't be parsed as a gradle package.`);
+        }
+        else {
+            return undefined;
+        }
     }
     else {
         ;
@@ -476,7 +487,7 @@ exports.parseGradlePackage = parseGradlePackage;
 /**
  * `parseGradleGraph` takes in the current module and dependency output and parses through the full `dependency` output.
  */
-function parseGradleGraph(gradleBuildModule, contents, subModuleMode = 'IGNORE') {
+function parseGradleGraph(gradleBuildModule, contents, subModuleMode, failOnError) {
     const start = Date.now();
     core.startGroup(`📄 Parsing gradle dependencies graph - '${gradleBuildModule}'`);
     const rootProject = new RootProject(gradleBuildModule);
@@ -494,7 +505,7 @@ function parseGradleGraph(gradleBuildModule, contents, subModuleMode = 'IGNORE')
         }
     }
     // parse dependency tree
-    parseGradleDependency(rootProject, rootProject, linesIterator, undefined, 0, subModuleMode);
+    parseGradleDependency(rootProject, rootProject, linesIterator, undefined, 0, subModuleMode, failOnError);
     core.info(`Completed parsing ${rootProject.packages.length} dependency associations within ${Date.now() - start}ms`);
     core.endGroup();
     return rootProject;
@@ -503,7 +514,7 @@ exports.parseGradleGraph = parseGradleGraph;
 /**
  *
  */
-function parseGradleDependency(rootProject, project, iterator, parentParent, level = 0, subModuleMode) {
+function parseGradleDependency(rootProject, project, iterator, parentParent, level = 0, subModuleMode, failOnError) {
     var _a, _b;
     // check if we are either at the end, or if we are not within a sub dependency
     let peekedLine = (_a = iterator.peek()) === null || _a === void 0 ? void 0 : _a.trimEnd(); // don't trim start (or it could kick away child insets)
@@ -532,7 +543,7 @@ function parseGradleDependency(rootProject, project, iterator, parentParent, lev
             }
             else {
                 const childProject = rootProject.getOrRegisterProject(parseProjectSpecification(line, level)); // register new child project with root
-                parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode);
+                parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode, failOnError);
                 project.childProjects.push(childProject); // register child project with parent project to retain hierarchy
                 core.info(`Found a child project dependency: ${childProject.name}`);
             }
@@ -543,12 +554,12 @@ function parseGradleDependency(rootProject, project, iterator, parentParent, lev
             if (level === 0 && strippedLine.endsWith(DEPENDENCY_CONSTRAINT)) {
                 continue; // ignore constraints at the root level
             }
-            const parent = parseGradlePackage(line, level);
+            const parent = parseGradlePackage(line, level, failOnError);
             if (parent) {
                 if (parentParent) {
                     project.packages.push([parentParent, parent]);
                 }
-                parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode);
+                parseGradleDependency(rootProject, project, iterator, parent, level + 1, subModuleMode, failOnError);
                 if (level === 0 || !parentParent) {
                     project.packages.push([parent, undefined]);
                 }
@@ -671,9 +682,9 @@ const utils_1 = __nccwpck_require__(918);
 /**
  * Retrieves the dependencies from gradle for the define dmodule and builds the Manifest for it.
  */
-function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode) {
+function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode, failOnError) {
     return __awaiter(this, void 0, void 0, function* () {
-        const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode);
+        const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode, failOnError);
         // inject the gradle dependency path into the root project
         rootProject.dependencyPath = gradleDependencyPath;
         // construct the Manifests
@@ -688,9 +699,9 @@ exports.prepareDependencyManifest = prepareDependencyManifest;
 /**
  * Retrieves the build environment from gradle and builds the Manifest for it.
  */
-function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDependencyPath) {
+function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDependencyPath, failOnError) {
     return __awaiter(this, void 0, void 0, function* () {
-        const rootProject = yield processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath);
+        const rootProject = yield processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath, failOnError);
         // inject the gradle dependency path into the root project
         rootProject.dependencyPath = gradleDependencyPath;
         // construct the Manifests
@@ -816,17 +827,17 @@ function buildManifest(result, useGradlew, gradleProjectPath, manifestName = und
         return manifest;
     });
 }
-function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode) {
+function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode, failOnError) {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`);
         const dependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, gradleBuildModule, moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration);
         core.endGroup();
-        const rootProject = (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode);
+        const rootProject = (0, parse_1.parseGradleGraph)(gradleBuildModule, dependencyList, subModuleMode, failOnError);
         if (subModuleMode === 'INDIVIDUAL_DEEP') {
             for (const project of rootProject.projectRegistry) {
                 core.startGroup(`🔨 Processing gradle dependencies for sub module - '${project.name}'`);
                 const subDependencyList = yield (0, gradle_1.retrieveGradleDependencies)(useGradlew, gradleProjectPath, project.name, moduleBuildConfiguration.get(project.name) || gradleBuildConfiguration);
-                const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT');
+                const subProject = (0, parse_1.parseGradleGraph)(project.name, subDependencyList, 'IGNORE_SILENT', failOnError);
                 project.packages.push(...subProject.packages);
                 core.endGroup();
             }
@@ -835,12 +846,12 @@ function processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule,
     });
 }
 exports.processDependencyList = processDependencyList;
-function processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath) {
+function processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath, failOnError) {
     return __awaiter(this, void 0, void 0, function* () {
         core.startGroup(`🔨 Processing gradle buildEnvironment`);
         const dependencyList = yield (0, gradle_1.retrieveGradleBuildEnvironment)(useGradlew, gradleProjectPath);
         core.endGroup();
-        return (0, parse_1.parseGradleGraph)(':', dependencyList, 'IGNORE_SILENT');
+        return (0, parse_1.parseGradleGraph)(':', dependencyList, 'IGNORE_SILENT', failOnError);
     });
 }
 exports.processBuildEnvironmentDependencyList = processBuildEnvironmentDependencyList;

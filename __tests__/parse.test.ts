@@ -122,35 +122,35 @@ jest.setTimeout(180000)
 
 describe('parseGradleDependencyOutput', () => {
   test('parses output of gradle dependency command into dependencies', () => {
-    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT).packages
+    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT, 'IGNORE', false).packages
 
     expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT)
   })
 
   test('parses output of gradle dependency command with unresolved dependencies', () => {
-    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_UNRESOLVED).packages
+    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_UNRESOLVED, 'IGNORE', false).packages
 
     expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED.length)
     expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED)
   })
 
   test('parses output of gradle dependency command with unspecified dependencies', () => {
-    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_UNSPECIFIED).packages
+    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_UNSPECIFIED, 'IGNORE', false).packages
 
     expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED.length)
     expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED)
   })
 
   test('parses output of gradle dependency command with bom into dependencies', () => {
-    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_SPRING).packages
+    const dependencies = parseGradleGraph('test', GRADLE_DEPENDENCY_OUTPUT_SPRING, 'IGNORE', false).packages
 
     expect(Object.values(dependencies).length).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING.length)
     expect(dependencies).toEqual(GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING)
   })
 
   test('parses output of gradle dependency command with sub projects', () => {
-    const rootProject = parseGradleGraph('test', fs.readFileSync('__tests__/elasticoutput.txt', 'utf8'), 'INDIVIDUAL')
+    const rootProject = parseGradleGraph('test', fs.readFileSync('__tests__/elasticoutput.txt', 'utf8'), 'INDIVIDUAL', false)
     expect(rootProject).toEqual(GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT)
   })
 })

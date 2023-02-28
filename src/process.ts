@@ -21,7 +21,8 @@ export async function prepareDependencyManifest(
   gradleBuildConfiguration: string,
   gradleDependencyPath: string | undefined,
   moduleBuildConfiguration: Map<string, string>,
-  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE',
+  failOnError: boolean
 ): Promise<Manifest[]> {
   const rootProject = await processDependencyList(
     useGradlew,
@@ -29,7 +30,8 @@ export async function prepareDependencyManifest(
     gradleBuildModule,
     gradleBuildConfiguration,
     moduleBuildConfiguration,
-    subModuleMode
+    subModuleMode,
+    failOnError
   )
 
   // inject the gradle dependency path into the root project
@@ -49,9 +51,10 @@ export async function prepareDependencyManifest(
 export async function prepareBuildEnvironmentManifest(
   useGradlew: boolean,
   gradleProjectPath: string,
-  gradleDependencyPath: string | undefined
+  gradleDependencyPath: string | undefined,
+  failOnError: boolean
 ): Promise<Manifest[]> {
-  const rootProject = await processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath)
+  const rootProject = await processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath, failOnError)
 
   // inject the gradle dependency path into the root project
   rootProject.dependencyPath = gradleDependencyPath
@@ -197,7 +200,8 @@ export async function processDependencyList(
   gradleBuildModule: string,
   gradleBuildConfiguration: string,
   moduleBuildConfiguration: Map<string, string>,
-  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
+  subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE',
+  failOnError: boolean
 ): Promise<RootProject> {
   core.startGroup(`🔨 Processing gradle dependencies for root module - '${gradleBuildModule}'`)
   const dependencyList = await retrieveGradleDependencies(
@@ -207,7 +211,7 @@ export async function processDependencyList(
     moduleBuildConfiguration.get(gradleBuildModule) || gradleBuildConfiguration
   )
   core.endGroup()
-  const rootProject = parseGradleGraph(gradleBuildModule, dependencyList, subModuleMode)
+  const rootProject = parseGradleGraph(gradleBuildModule, dependencyList, subModuleMode, failOnError)
 
   if (subModuleMode === 'INDIVIDUAL_DEEP') {
     for (const project of rootProject.projectRegistry) {
@@ -218,7 +222,7 @@ export async function processDependencyList(
         project.name,
         moduleBuildConfiguration.get(project.name) || gradleBuildConfiguration
       )
-      const subProject = parseGradleGraph(project.name, subDependencyList, 'IGNORE_SILENT')
+      const subProject = parseGradleGraph(project.name, subDependencyList, 'IGNORE_SILENT', failOnError)
       project.packages.push(...subProject.packages)
       core.endGroup()
     }
@@ -229,12 +233,13 @@ export async function processDependencyList(
 
 export async function processBuildEnvironmentDependencyList(
   useGradlew: boolean,
-  gradleProjectPath: string
+  gradleProjectPath: string,
+  failOnError: boolean
 ): Promise<RootProject> {
   core.startGroup(`🔨 Processing gradle buildEnvironment`)
   const dependencyList = await retrieveGradleBuildEnvironment(useGradlew, gradleProjectPath)
   core.endGroup()
-  return parseGradleGraph(':', dependencyList, 'IGNORE_SILENT')
+  return parseGradleGraph(':', dependencyList, 'IGNORE_SILENT', failOnError)
 }
 
 interface Result {

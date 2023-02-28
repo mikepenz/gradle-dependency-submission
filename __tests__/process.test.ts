@@ -15,7 +15,7 @@ jest.setTimeout(240000)
 describe('processBuildEnvironmentDependencyList', () => {
   process.env['GITHUB_WORKSPACE'] = '.'
   test('run in gradle-example', async () => {
-    const project = await processBuildEnvironmentDependencyList(true, 'gradle-example')
+    const project = await processBuildEnvironmentDependencyList(true, 'gradle-example', false)
     const dependencies = project.packages
     expect(dependencies).toHaveLength(BUILD_ENVIRONMENT_EXPECTED_OUTPUT.length)
     expect(dependencies).toEqual(BUILD_ENVIRONMENT_EXPECTED_OUTPUT)
@@ -31,7 +31,8 @@ describe('processDependencyList', () => {
       ':app',
       'debugCompileClasspath',
       new Map<string, string>(),
-      'IGNORE'
+      'IGNORE',
+      false
     )
     const dependencies = project.packages
     expect(dependencies).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_OUTPUT.length)
@@ -40,14 +41,14 @@ describe('processDependencyList', () => {
 
   test('run in gradle-example with invalid configuration', async () => {
     try {
-      await processDependencyList(true, 'gradle-example', ':app', 'non-existing', new Map<string, string>(), 'IGNORE')
+      await processDependencyList(true, 'gradle-example', ':app', 'non-existing', new Map<string, string>(), 'IGNORE', false)
     } catch (error: any) {
       expect(error.message).toEqual("Failed to execute './gradlew :app:dependencies --configuration non-existing'")
     }
   })
 
   test('run in root', async () => {
-    const project = await processDependencyList(false, '', ':', 'compileClasspath', new Map<string, string>(), 'IGNORE')
+    const project = await processDependencyList(false, '', ':', 'compileClasspath', new Map<string, string>(), 'IGNORE', false)
     const dependencies = project.packages
     expect(dependencies).toHaveLength(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT)
@@ -63,7 +64,8 @@ describe('prepareDependencyManifest', () => {
       'debugCompileClasspath',
       undefined,
       new Map<string, string>(),
-      'IGNORE'
+      'IGNORE',
+      false
     )
     expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_IGNORE.length)
     expect(manifests).toEqual(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_IGNORE)
@@ -77,7 +79,8 @@ describe('prepareDependencyManifest', () => {
       'debugCompileClasspath',
       undefined,
       new Map<string, string>(),
-      'COMBINED'
+      'COMBINED',
+      false
     )
     expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED.length)
     expect(manifests).toEqual(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED)
@@ -91,7 +94,8 @@ describe('prepareDependencyManifest', () => {
       'debugCompileClasspath',
       undefined,
       new Map<string, string>(),
-      'INDIVIDUAL'
+      'INDIVIDUAL',
+      false
     )
     expect(manifests).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL.length)
     expect(manifests).toEqual(EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL)
@@ -105,7 +109,8 @@ describe('prepareDependencyManifest', () => {
       "",
       undefined,
       new Map<string, string>(),
-      'IGNORE'
+      'IGNORE',
+      false
     )
 
     expect(manifest).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED.length)

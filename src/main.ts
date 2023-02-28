@@ -14,6 +14,7 @@ async function run(): Promise<void> {
   let subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE'
   const subModuleModeInput = core.getInput('sub-module-mode')
   const includeBuildEnvironment = core.getBooleanInput('include-build-environment')
+  const failOnError = core.getBooleanInput('fail-on-error')
   let correlator = core.getInput('correlator')
 
   // verify inputs are valid
@@ -88,13 +89,19 @@ async function run(): Promise<void> {
       configuration,
       gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined,
       moduleBuildConfigurations,
-      subModuleMode
+      subModuleMode,
+      failOnError
     )
     manifests.push(...subManifests)
   }
 
   if (includeBuildEnvironment) {
-    const buildEnvironmentManifest = await prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath[0], undefined)
+    const buildEnvironmentManifest = await prepareBuildEnvironmentManifest(
+      useGradlew,
+      gradleProjectPath[0],
+      undefined,
+      failOnError
+    )
     manifests.push(...buildEnvironmentManifest)
   }
 
