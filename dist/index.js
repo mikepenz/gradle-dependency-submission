@@ -4561,7 +4561,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.submitSnapshot = exports.Snapshot = exports.jobFromContext = void 0;
+exports.submitSnapshot = exports.Snapshot = exports.shaFromContext = exports.jobFromContext = void 0;
 const core = __importStar(__nccwpck_require2_(2186));
 const github = __importStar(__nccwpck_require2_(5438));
 const request_error_1 = __nccwpck_require2_(537);
@@ -4579,6 +4579,35 @@ function jobFromContext(context) {
 }
 exports.jobFromContext = jobFromContext;
 /**
+ * shaFromContext returns the sha of the commit that triggered the action, or the head sha of the PR.
+ *
+ * See https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request for more details
+ * about why this function is necessary, but the short reason is that GITHUB_SHA is _not_ necessarily the head sha
+ * of the PR when the event is pull_request (or some other related event types).
+ *
+ * @param {Context} context
+ * @returns {string}
+ */
+function shaFromContext(context) {
+    const pullRequestEvents = [
+        'pull_request',
+        'pull_request_comment',
+        'pull_request_review',
+        'pull_request_review_comment'
+        // Note that pull_request_target is omitted here.
+        // That event runs in the context of the base commit of the PR,
+        // so the snapshot should not be associated with the head commit.
+    ];
+    if (pullRequestEvents.includes(context.eventName)) {
+        const pr = context.payload.pull_request;
+        return pr.head.sha;
+    }
+    else {
+        return context.sha;
+    }
+}
+exports.shaFromContext = shaFromContext;
+/**
  * Snapshot is the top-level container for Dependency Submission
  */
 class Snapshot {
@@ -4595,7 +4624,7 @@ class Snapshot {
         this.detector = detector;
         this.version = version;
         this.job = job || jobFromContext(context);
-        this.sha = context.sha;
+        this.sha = shaFromContext(context);
         this.ref = context.ref;
         this.scanned = date.toISOString();
         this.manifests = {};
