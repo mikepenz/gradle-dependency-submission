@@ -111,7 +111,7 @@ async function run(): Promise<void> {
     {
       name: 'online-photo-submission/gradle-dependency-submission',
       url: 'https://github.com/online-photo-submission/gradle-dependency-submission',
-      version: 'v1.0.1-rc2'
+      version: 'v1.0.1-rc3'
     },
     github.context,
     {
