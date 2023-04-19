@@ -280,7 +280,9 @@ const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const process_1 = __nccwpck_require__(1647);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        core.debug("Using Online-Photo-Submission fork");
+        core.startGroup('Fork Info');
+        core.debug("Using Online-Photo-Submission fork v1.0.1-rc4");
+        core.endGroup();
         core.startGroup(`📘 Reading input values`);
         const useGradlew = core.getBooleanInput('use-gradlew');
         let gradleProjectPath = core.getMultilineInput('gradle-project-path');
@@ -360,7 +362,7 @@ function run() {
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'online-photo-submission/gradle-dependency-submission',
             url: 'https://github.com/online-photo-submission/gradle-dependency-submission',
-            version: 'v1.0.1-rc3'
+            version: 'v1.0.1-rc4'
         }, github.context, {
             correlator,
             id: github.context.runId.toString()
