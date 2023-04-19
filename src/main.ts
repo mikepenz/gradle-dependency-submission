@@ -4,6 +4,8 @@ import {Snapshot, Manifest, submitSnapshot} from '@github/dependency-submission-
 import {prepareBuildEnvironmentManifest, prepareDependencyManifest} from './process'
 
 async function run(): Promise<void> {
+  core.debug("Using Online-Photo-Submission fork")
+
   core.startGroup(`📘 Reading input values`)
   const useGradlew = core.getBooleanInput('use-gradlew')
   let gradleProjectPath = core.getMultilineInput('gradle-project-path')
