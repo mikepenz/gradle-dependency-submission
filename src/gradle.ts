@@ -14,7 +14,7 @@ export async function singlePropertySupport(useGradlew: boolean, gradleProjectPa
       return true
     } else {
       core.warning(
-        `The current gradle version does not support retrieving a single property. Found version: ${version}. Errors may occur with versions below 7.5.0.`
+        `The current gradle version does not support retrieving a single property. Found version: ${version}.`
       )
       return false
     }
