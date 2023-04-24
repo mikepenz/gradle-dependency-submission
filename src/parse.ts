@@ -156,6 +156,8 @@ function parseGradleDependency(
         core.info(`Found a project dependency, skipping (Currently not supported) - ${line}`)
       } else if (subModuleMode === 'IGNORE_SILENT') {
         core.debug(`Found a project dependency, skipping (Currently not supported) - ${line}`)
+      } else if (strippedLine.endsWith(DEPENDENCY_NOT_RESOLVED)) {
+        core.info(`Found an enresolved project dependency, skipping - ${line}`)
       } else {
         const childProject = rootProject.getOrRegisterProject(parseProjectSpecification(line, level)) // register new child project with root
         parseGradleDependency(rootProject, childProject, iterator, undefined, level + 1, subModuleMode, failOnError)
