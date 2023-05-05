@@ -4,6 +4,8 @@ plugins {
 
 dependencies {
     api("org.json:json:20220320")
+
+    api project(":library-child-2:library-child-child-1")
 }
 
 java {
