@@ -1,12 +1,13 @@
-import {jest, describe, test, expect} from '@jest/globals'
-import {parseGradleGraph} from '../src/parse'
+import { jest, describe, test, expect } from '@jest/globals'
+import { parseGradleGraph } from '../src/parse'
 import fs from 'fs'
 import {
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT,
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED,
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING,
   GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT,
-  GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED
+  GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED,
+  GRADLE_EXAMPLE_NESTED_MULTI_MODULE_PROJECT
 } from './expected_dependency_results'
 
 const GRADLE_DEPENDENCY_OUTPUT = `
@@ -118,6 +119,26 @@ compileClasspath - Compile classpath for source set 'main'.
 (*) - dependencies omitted (listed previously)
 `
 
+const GRADLE_NESTED_MULTI_MODULE_PROJECT = `
+> Task :app:dependencies
+
+------------------------------------------------------------
+Project ':app'
+------------------------------------------------------------
+
+compileClasspath - Compile classpath for compilation 'main' (target  (jvm)).
++--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0
+\\--- project :common:hello
+
+implementation - Implementation only dependencies for compilation 'main' (target  (jvm)). (n)
+\\--- project hello (n)
+
+runtimeClasspath - Runtime classpath of compilation 'main' (target  (jvm)).
++--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0
+\\--- project :common:hello
+     \\--- org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0
+`
+
 jest.setTimeout(180000)
 
 describe('parseGradleDependencyOutput', () => {
@@ -152,5 +173,11 @@ describe('parseGradleDependencyOutput', () => {
   test('parses output of gradle dependency command with sub projects', () => {
     const rootProject = parseGradleGraph('test', fs.readFileSync('__tests__/elasticoutput.txt', 'utf8'), 'INDIVIDUAL', false)
     expect(rootProject).toEqual(GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT)
+  })
+
+  test('parses output of gradle dependency command with nested sub projects', () => {
+    const rootProject = parseGradleGraph('test', GRADLE_NESTED_MULTI_MODULE_PROJECT, 'INDIVIDUAL', false)
+
+    expect(rootProject).toEqual(GRADLE_EXAMPLE_NESTED_MULTI_MODULE_PROJECT)
   })
 })

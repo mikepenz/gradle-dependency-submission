@@ -5437,3 +5437,90 @@ export const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
     }
   ]
 }
+
+export const GRADLE_EXAMPLE_NESTED_MULTI_MODULE_PROJECT = {
+  "childProjects": [
+    {
+      "childProjects": [],
+      "dependencyPath": undefined,
+      "name": ":common:hello",
+      "packages": [
+        [
+          {
+            "name": "kotlin-stdlib-jdk8",
+            "namespace": "org.jetbrains.kotlin",
+            "qualifiers": null,
+            "subpath": null,
+            "type": "maven",
+            "version": "1.8.0",
+          },
+          undefined,
+        ],
+      ],
+    },
+    {
+      "childProjects": [],
+      "dependencyPath": undefined,
+      "name": ":common:hello",
+      "packages": [
+        [
+          {
+            "name": "kotlin-stdlib-jdk8",
+            "namespace": "org.jetbrains.kotlin",
+            "qualifiers": null,
+            "subpath": null,
+            "type": "maven",
+            "version": "1.8.0",
+          },
+          undefined,
+        ],
+      ],
+    },
+  ],
+  "dependencyPath": undefined,
+  "name": "test",
+  "packages": [
+    [
+      {
+        "name": "kotlin-stdlib-jdk8",
+        "namespace": "org.jetbrains.kotlin",
+        "qualifiers": null,
+        "subpath": null,
+        "type": "maven",
+        "version": "1.8.0",
+      },
+      undefined,
+    ],
+    [
+      {
+        "name": "kotlin-stdlib-jdk8",
+        "namespace": "org.jetbrains.kotlin",
+        "qualifiers": null,
+        "subpath": null,
+        "type": "maven",
+        "version": "1.8.0",
+      },
+      undefined,
+    ],
+  ],
+  "projectRegistry": [
+    {
+      "childProjects": [],
+      "dependencyPath": undefined,
+      "name": ":common:hello",
+      "packages": [
+        [
+          {
+            "name": "kotlin-stdlib-jdk8",
+            "namespace": "org.jetbrains.kotlin",
+            "qualifiers": null,
+            "subpath": null,
+            "type": "maven",
+            "version": "1.8.0",
+          },
+          undefined,
+        ],
+      ],
+    },
+  ],
+}
