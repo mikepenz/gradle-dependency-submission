@@ -27,7 +27,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@github/dependency-submission-toolkit": "^1.2.10",
-    "semver": "^7.5.0"
+    "semver": "^7.5.1"
   },
   "devDependencies": {
     "@types/node": "^20.1.1",
