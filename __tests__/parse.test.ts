@@ -1,5 +1,5 @@
-import { jest, describe, test, expect } from '@jest/globals'
-import { parseGradleGraph } from '../src/parse'
+import {jest, describe, test, expect} from '@jest/globals'
+import {parseGradleGraph} from '../src/parse'
 import fs from 'fs'
 import {
   GRADLE_EXAMPLE_DEPENDENCY_OUTPUT,
@@ -38,7 +38,6 @@ A web-based, searchable dependency report is available by adding the --scan opti
 BUILD SUCCESSFUL in 555ms
 1 actionable task: 1 executed`
 
-
 const GRADLE_DEPENDENCY_OUTPUT_UNRESOLVED = `
 > Task :app:dependencies
 
@@ -62,7 +61,6 @@ A web-based, searchable dependency report is available by adding the --scan opti
 BUILD SUCCESSFUL in 555ms
 1 actionable task: 1 executed`
 
-
 const GRADLE_DEPENDENCY_OUTPUT_UNSPECIFIED = `
 > Task :app:dependencies
 
@@ -85,7 +83,6 @@ A web-based, searchable dependency report is available by adding the --scan opti
 
 BUILD SUCCESSFUL in 555ms
 1 actionable task: 1 executed`
-
 
 const GRADLE_DEPENDENCY_OUTPUT_SPRING = `
 Type-safe dependency accessors is an incubating feature.
@@ -171,7 +168,12 @@ describe('parseGradleDependencyOutput', () => {
   })
 
   test('parses output of gradle dependency command with sub projects', () => {
-    const rootProject = parseGradleGraph('test', fs.readFileSync('__tests__/elasticoutput.txt', 'utf8'), 'INDIVIDUAL', false)
+    const rootProject = parseGradleGraph(
+      'test',
+      fs.readFileSync('__tests__/elasticoutput.txt', 'utf8'),
+      'INDIVIDUAL',
+      false
+    )
     expect(rootProject).toEqual(GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT)
   })
 
