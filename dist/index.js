@@ -160,25 +160,25 @@ exports.retrieveGradleBuildEnvironment = retrieveGradleBuildEnvironment;
 /**
  * Retrieves the `buildFile` `property` from a given `module` name in the configured gradle project.
  */
-function retrieveGradleBuildPath(useGradlew, gradleProjectPath, gradleBuildModule) {
+function retrieveGradleBuildPath(useGradlew, gradleProjectPath, gradleBuildModule, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
-        return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile');
+        return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile', legacySupport);
     });
 }
 exports.retrieveGradleBuildPath = retrieveGradleBuildPath;
 /**
  * Retrieves the `name` `property` from the configured gradle project.
  */
-function retrieveGradleProjectName(useGradlew, gradleProjectPath) {
+function retrieveGradleProjectName(useGradlew, gradleProjectPath, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
-        return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name');
+        return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name', legacySupport);
     });
 }
 exports.retrieveGradleProjectName = retrieveGradleProjectName;
 /**
  * Retrieves the `property` from a given `module` name
  */
-function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, property) {
+function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, property, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
         const singlePropertySupported = yield singlePropertySupport(useGradlew, gradleProjectPath);
         const command = retrieveGradleCLI(useGradlew);
@@ -187,8 +187,12 @@ function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule
         if (singlePropertySupported) {
             commandArgs = [`${module}:properties`, '-q', '--property', property];
         }
-        else {
+        else if (legacySupport) {
             commandArgs = [`${module}:properties`, '-q'];
+        }
+        else {
+            core.error(`To enable support for legacy gradle versions without single property support, enable 'legacy-support'. (This will read all properties, read description before proceeding.)`);
+            return undefined;
         }
         const propertyOutput = yield exec.getExecOutput(command, commandArgs, {
             cwd: gradleProjectPath,
@@ -206,7 +210,10 @@ function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule
             matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`));
         }
         else {
-            matched = output.split('\n').map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`))).find(it => it !== null);
+            matched = output
+                .split('\n')
+                .map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`)))
+                .find(it => it !== null);
         }
         if (matched !== null && matched !== undefined) {
             return matched[2];
@@ -280,9 +287,6 @@ const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const process_1 = __nccwpck_require__(1647);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        core.startGroup('Fork Info');
-        core.debug("Using Online-Photo-Submission fork v1.0.1-rc4");
-        core.endGroup();
         core.startGroup(`📘 Reading input values`);
         const useGradlew = core.getBooleanInput('use-gradlew');
         let gradleProjectPath = core.getMultilineInput('gradle-project-path');
@@ -295,6 +299,7 @@ function run() {
         const includeBuildEnvironment = core.getBooleanInput('include-build-environment');
         const failOnError = core.getBooleanInput('fail-on-error');
         let correlator = core.getInput('correlator');
+        const legacySupport = core.getBooleanInput('legacy-support');
         // verify inputs are valid
         if (gradleProjectPath.length === 0) {
             core.debug(`No 'gradle-project-path' passed, using 'root'`);
@@ -352,17 +357,17 @@ function run() {
             // else -> use the config for the given item
             const gbcl = gradleBuildConfiguration.length;
             const configuration = gbcl === 0 ? '' : gbcl === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i];
-            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], configuration, gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode, failOnError);
+            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], configuration, gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode, failOnError, legacySupport);
             manifests.push(...subManifests);
         }
         if (includeBuildEnvironment) {
-            const buildEnvironmentManifest = yield (0, process_1.prepareBuildEnvironmentManifest)(useGradlew, gradleProjectPath[0], undefined, failOnError);
+            const buildEnvironmentManifest = yield (0, process_1.prepareBuildEnvironmentManifest)(useGradlew, gradleProjectPath[0], undefined, failOnError, legacySupport);
             manifests.push(...buildEnvironmentManifest);
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
-            name: 'online-photo-submission/gradle-dependency-submission',
-            url: 'https://github.com/online-photo-submission/gradle-dependency-submission',
-            version: 'v1.0.1-rc4'
+            name: 'mikepenz/gradle-dependency-submission',
+            url: 'https://github.com/mikepenz/gradle-dependency-submission',
+            version: 'v1.0.1'
         }, github.context, {
             correlator,
             id: github.context.runId.toString()
@@ -699,7 +704,7 @@ const utils_1 = __nccwpck_require__(918);
 /**
  * Retrieves the dependencies from gradle for the define dmodule and builds the Manifest for it.
  */
-function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode, failOnError) {
+function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode, failOnError = false, legacySupport = false) {
     return __awaiter(this, void 0, void 0, function* () {
         const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode, failOnError);
         // inject the gradle dependency path into the root project
@@ -707,7 +712,7 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
         // construct the Manifests
         const manifests = [];
         for (const result of transformProject(rootProject, subModuleMode)) {
-            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath));
+            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath, legacySupport));
         }
         return manifests;
     });
@@ -716,7 +721,7 @@ exports.prepareDependencyManifest = prepareDependencyManifest;
 /**
  * Retrieves the build environment from gradle and builds the Manifest for it.
  */
-function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDependencyPath, failOnError) {
+function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDependencyPath, failOnError, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
         const rootProject = yield processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath, failOnError);
         // inject the gradle dependency path into the root project
@@ -724,7 +729,7 @@ function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDe
         // construct the Manifests
         const manifests = [];
         for (const result of transformProject(rootProject, 'COMBINED')) {
-            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath, 'buildEnvironment'));
+            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath, legacySupport, 'buildEnvironment'));
         }
         return manifests;
     });
@@ -798,12 +803,12 @@ function transformProject(rootProject, subModuleMode) {
 /**
  *
  */
-function buildManifest(result, useGradlew, gradleProjectPath, manifestName = undefined) {
+function buildManifest(result, useGradlew, gradleProjectPath, legacySupport, manifestName = undefined) {
     return __awaiter(this, void 0, void 0, function* () {
         const { project, packageCache, directDependencies, indirectDependencies } = result;
         let dependencyPath;
         if (project.dependencyPath === undefined) {
-            const buildPath = yield (0, gradle_1.retrieveGradleBuildPath)(useGradlew, gradleProjectPath, project.name);
+            const buildPath = yield (0, gradle_1.retrieveGradleBuildPath)(useGradlew, gradleProjectPath, project.name, legacySupport);
             if (buildPath === undefined) {
                 core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${project.name}`);
                 throw new Error(`Failed to retrieve gradle build path.`);
@@ -819,7 +824,7 @@ function buildManifest(result, useGradlew, gradleProjectPath, manifestName = und
         let name = manifestName || path.dirname(dependencyPath);
         if (name === '.') {
             // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
-            name = (yield (0, gradle_1.retrieveGradleProjectName)(useGradlew, gradleProjectPath)) || dependencyPath;
+            name = (yield (0, gradle_1.retrieveGradleProjectName)(useGradlew, gradleProjectPath, legacySupport)) || dependencyPath;
         }
         const manifest = new dependency_submission_toolkit_1.Manifest(name, dependencyPath);
         core.info(`Connection ${directDependencies.length} direct dependencies`);
@@ -17605,9 +17610,9 @@ Body.prototype = {
 	json() {
 		var _this2 = this;
 
-		return this.text().then(function (text) {
+		return consumeBody.call(this).then(function (buffer) {
 			try {
-				return JSON.parse(text);
+				return JSON.parse(buffer.toString());
 			} catch (err) {
 				return Body.Promise.reject(new FetchError(`invalid json response body at ${_this2.url} reason: ${err.message}`, 'invalid-json'));
 			}
@@ -17621,7 +17626,7 @@ Body.prototype = {
   */
 	text() {
 		return consumeBody.call(this).then(function (buffer) {
-			return new TextDecoder().decode(buffer);
+			return buffer.toString();
 		});
 	},
 
@@ -19081,8 +19086,11 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
 
 		if (headers['transfer-encoding'] === 'chunked' && !headers['content-length']) {
 			response.once('close', function (hadError) {
+				// tests for socket presence, as in some situations the
+				// the 'socket' event is not triggered for the request
+				// (happens in deno), avoids `TypeError`
 				// if a data listener is still present we didn't end cleanly
-				const hasDataListener = socket.listenerCount('data') > 0;
+				const hasDataListener = socket && socket.listenerCount('data') > 0;
 
 				if (hasDataListener && !hadError) {
 					const err = new Error('Premature close');
@@ -19421,6 +19429,7 @@ class Comparator {
       }
     }
 
+    comp = comp.trim().split(/\s+/).join(' ')
     debug('comparator', comp, options)
     this.options = options
     this.loose = !!options.loose
@@ -19538,7 +19547,7 @@ class Comparator {
 module.exports = Comparator
 
 const parseOptions = __nccwpck_require__(785)
-const { re, t } = __nccwpck_require__(9523)
+const { safeRe: re, t } = __nccwpck_require__(9523)
 const cmp = __nccwpck_require__(5098)
 const debug = __nccwpck_require__(427)
 const SemVer = __nccwpck_require__(8088)
@@ -19578,9 +19587,16 @@ class Range {
     this.loose = !!options.loose
     this.includePrerelease = !!options.includePrerelease
 
-    // First, split based on boolean or ||
+    // First reduce all whitespace as much as possible so we do not have to rely
+    // on potentially slow regexes like \s*. This is then stored and used for
+    // future error messages as well.
     this.raw = range
-    this.set = range
+      .trim()
+      .split(/\s+/)
+      .join(' ')
+
+    // First, split on ||
+    this.set = this.raw
       .split('||')
       // map the range to a 2d array of comparators
       .map(r => this.parseRange(r.trim()))
@@ -19590,7 +19606,7 @@ class Range {
       .filter(c => c.length)
 
     if (!this.set.length) {
-      throw new TypeError(`Invalid SemVer Range: ${range}`)
+      throw new TypeError(`Invalid SemVer Range: ${this.raw}`)
     }
 
     // if we have any that are not the null set, throw out null sets.
@@ -19616,9 +19632,7 @@ class Range {
 
   format () {
     this.range = this.set
-      .map((comps) => {
-        return comps.join(' ').trim()
-      })
+      .map((comps) => comps.join(' ').trim())
       .join('||')
       .trim()
     return this.range
@@ -19629,8 +19643,6 @@ class Range {
   }
 
   parseRange (range) {
-    range = range.trim()
-
     // memoize range parsing for performance.
     // this is a very hot path, and fully deterministic.
     const memoOpts =
@@ -19647,18 +19659,18 @@ class Range {
     const hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE]
     range = range.replace(hr, hyphenReplace(this.options.includePrerelease))
     debug('hyphen replace', range)
+
     // `> 1.2.3 < 1.2.5` => `>1.2.3 <1.2.5`
     range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace)
     debug('comparator trim', range)
 
     // `~ 1.2.3` => `~1.2.3`
     range = range.replace(re[t.TILDETRIM], tildeTrimReplace)
+    debug('tilde trim', range)
 
     // `^ 1.2.3` => `^1.2.3`
     range = range.replace(re[t.CARETTRIM], caretTrimReplace)
-
-    // normalize spaces
-    range = range.split(/\s+/).join(' ')
+    debug('caret trim', range)
 
     // At this point, the range is completely trimmed and
     // ready to be split into comparators.
@@ -19755,7 +19767,7 @@ const Comparator = __nccwpck_require__(1532)
 const debug = __nccwpck_require__(427)
 const SemVer = __nccwpck_require__(8088)
 const {
-  re,
+  safeRe: re,
   t,
   comparatorTrimReplace,
   tildeTrimReplace,
@@ -19809,10 +19821,13 @@ const isX = id => !id || id.toLowerCase() === 'x' || id === '*'
 // ~1.2.3, ~>1.2.3 --> >=1.2.3 <1.3.0-0
 // ~1.2.0, ~>1.2.0 --> >=1.2.0 <1.3.0-0
 // ~0.0.1 --> >=0.0.1 <0.1.0-0
-const replaceTildes = (comp, options) =>
-  comp.trim().split(/\s+/).map((c) => {
-    return replaceTilde(c, options)
-  }).join(' ')
+const replaceTildes = (comp, options) => {
+  return comp
+    .trim()
+    .split(/\s+/)
+    .map((c) => replaceTilde(c, options))
+    .join(' ')
+}
 
 const replaceTilde = (comp, options) => {
   const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE]
@@ -19850,10 +19865,13 @@ const replaceTilde = (comp, options) => {
 // ^1.2.0 --> >=1.2.0 <2.0.0-0
 // ^0.0.1 --> >=0.0.1 <0.0.2-0
 // ^0.1.0 --> >=0.1.0 <0.2.0-0
-const replaceCarets = (comp, options) =>
-  comp.trim().split(/\s+/).map((c) => {
-    return replaceCaret(c, options)
-  }).join(' ')
+const replaceCarets = (comp, options) => {
+  return comp
+    .trim()
+    .split(/\s+/)
+    .map((c) => replaceCaret(c, options))
+    .join(' ')
+}
 
 const replaceCaret = (comp, options) => {
   debug('caret', comp, options)
@@ -19910,9 +19928,10 @@ const replaceCaret = (comp, options) => {
 
 const replaceXRanges = (comp, options) => {
   debug('replaceXRanges', comp, options)
-  return comp.split(/\s+/).map((c) => {
-    return replaceXRange(c, options)
-  }).join(' ')
+  return comp
+    .split(/\s+/)
+    .map((c) => replaceXRange(c, options))
+    .join(' ')
 }
 
 const replaceXRange = (comp, options) => {
@@ -19995,12 +20014,15 @@ const replaceXRange = (comp, options) => {
 const replaceStars = (comp, options) => {
   debug('replaceStars', comp, options)
   // Looseness is ignored here.  star is always as loose as it gets!
-  return comp.trim().replace(re[t.STAR], '')
+  return comp
+    .trim()
+    .replace(re[t.STAR], '')
 }
 
 const replaceGTE0 = (comp, options) => {
   debug('replaceGTE0', comp, options)
-  return comp.trim()
+  return comp
+    .trim()
     .replace(re[options.includePrerelease ? t.GTE0PRE : t.GTE0], '')
 }
 
@@ -20038,7 +20060,7 @@ const hyphenReplace = incPr => ($0,
     to = `<=${to}`
   }
 
-  return (`${from} ${to}`).trim()
+  return `${from} ${to}`.trim()
 }
 
 const testSet = (set, version, options) => {
@@ -20085,7 +20107,7 @@ const testSet = (set, version, options) => {
 
 const debug = __nccwpck_require__(427)
 const { MAX_LENGTH, MAX_SAFE_INTEGER } = __nccwpck_require__(2293)
-const { re, t } = __nccwpck_require__(9523)
+const { safeRe: re, t } = __nccwpck_require__(9523)
 
 const parseOptions = __nccwpck_require__(785)
 const { compareIdentifiers } = __nccwpck_require__(2463)
@@ -20101,7 +20123,7 @@ class SemVer {
         version = version.version
       }
     } else if (typeof version !== 'string') {
-      throw new TypeError(`Invalid Version: ${(__nccwpck_require__(3837).inspect)(version)}`)
+      throw new TypeError(`Invalid version. Must be a string. Got type "${typeof version}".`)
     }
 
     if (version.length > MAX_LENGTH) {
@@ -20376,8 +20398,10 @@ class SemVer {
       default:
         throw new Error(`invalid increment argument: ${release}`)
     }
-    this.format()
-    this.raw = this.version
+    this.raw = this.format()
+    if (this.build.length) {
+      this.raw += `+${this.build.join('.')}`
+    }
     return this
   }
 }
@@ -20464,7 +20488,7 @@ module.exports = cmp
 
 const SemVer = __nccwpck_require__(8088)
 const parse = __nccwpck_require__(5925)
-const { re, t } = __nccwpck_require__(9523)
+const { safeRe: re, t } = __nccwpck_require__(9523)
 
 const coerce = (version, options) => {
   if (version instanceof SemVer) {
@@ -20572,6 +20596,35 @@ const diff = (version1, version2) => {
   const highVersion = v1Higher ? v1 : v2
   const lowVersion = v1Higher ? v2 : v1
   const highHasPre = !!highVersion.prerelease.length
+  const lowHasPre = !!lowVersion.prerelease.length
+
+  if (lowHasPre && !highHasPre) {
+    // Going from prerelease -> no prerelease requires some special casing
+
+    // If the low version has only a major, then it will always be a major
+    // Some examples:
+    // 1.0.0-1 -> 1.0.0
+    // 1.0.0-1 -> 1.1.1
+    // 1.0.0-1 -> 2.0.0
+    if (!lowVersion.patch && !lowVersion.minor) {
+      return 'major'
+    }
+
+    // Otherwise it can be determined by checking the high version
+
+    if (highVersion.patch) {
+      // anything higher than a patch bump would result in the wrong version
+      return 'patch'
+    }
+
+    if (highVersion.minor) {
+      // anything higher than a minor bump would result in the wrong version
+      return 'minor'
+    }
+
+    // bumping major/minor/patch all have same result
+    return 'major'
+  }
 
   // add the `pre` prefix if we are going to a prerelease version
   const prefix = highHasPre ? 'pre' : ''
@@ -20588,26 +20641,8 @@ const diff = (version1, version2) => {
     return prefix + 'patch'
   }
 
-  // at this point we know stable versions match but overall versions are not equal,
-  // so either they are both prereleases, or the lower version is a prerelease
-
-  if (highHasPre) {
-    // high and low are preleases
-    return 'prerelease'
-  }
-
-  if (lowVersion.patch) {
-    // anything higher than a patch bump would result in the wrong version
-    return 'patch'
-  }
-
-  if (lowVersion.minor) {
-    // anything higher than a minor bump would result in the wrong version
-    return 'minor'
-  }
-
-  // bumping major/minor/patch all have same result
-  return 'major'
+  // high and low are preleases
+  return 'prerelease'
 }
 
 module.exports = diff
@@ -20937,6 +20972,10 @@ const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER ||
 // Max safe segment length for coercion.
 const MAX_SAFE_COMPONENT_LENGTH = 16
 
+// Max safe length for a build identifier. The max length minus 6 characters for
+// the shortest version with a build 0.0.0+BUILD.
+const MAX_SAFE_BUILD_LENGTH = MAX_LENGTH - 6
+
 const RELEASE_TYPES = [
   'major',
   'premajor',
@@ -20950,6 +20989,7 @@ const RELEASE_TYPES = [
 module.exports = {
   MAX_LENGTH,
   MAX_SAFE_COMPONENT_LENGTH,
+  MAX_SAFE_BUILD_LENGTH,
   MAX_SAFE_INTEGER,
   RELEASE_TYPES,
   SEMVER_SPEC_VERSION,
@@ -21031,22 +21071,52 @@ module.exports = parseOptions
 /***/ 9523:
 /***/ ((module, exports, __nccwpck_require__) => {
 
-const { MAX_SAFE_COMPONENT_LENGTH } = __nccwpck_require__(2293)
+const {
+  MAX_SAFE_COMPONENT_LENGTH,
+  MAX_SAFE_BUILD_LENGTH,
+  MAX_LENGTH,
+} = __nccwpck_require__(2293)
 const debug = __nccwpck_require__(427)
 exports = module.exports = {}
 
 // The actual regexps go on exports.re
 const re = exports.re = []
+const safeRe = exports.safeRe = []
 const src = exports.src = []
 const t = exports.t = {}
 let R = 0
 
+const LETTERDASHNUMBER = '[a-zA-Z0-9-]'
+
+// Replace some greedy regex tokens to prevent regex dos issues. These regex are
+// used internally via the safeRe object since all inputs in this library get
+// normalized first to trim and collapse all extra whitespace. The original
+// regexes are exported for userland consumption and lower level usage. A
+// future breaking change could export the safer regex only with a note that
+// all input should have extra whitespace removed.
+const safeRegexReplacements = [
+  ['\\s', 1],
+  ['\\d', MAX_LENGTH],
+  [LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH],
+]
+
+const makeSafeRegex = (value) => {
+  for (const [token, max] of safeRegexReplacements) {
+    value = value
+      .split(`${token}*`).join(`${token}{0,${max}}`)
+      .split(`${token}+`).join(`${token}{1,${max}}`)
+  }
+  return value
+}
+
 const createToken = (name, value, isGlobal) => {
+  const safe = makeSafeRegex(value)
   const index = R++
   debug(name, index, value)
   t[name] = index
   src[index] = value
   re[index] = new RegExp(value, isGlobal ? 'g' : undefined)
+  safeRe[index] = new RegExp(safe, isGlobal ? 'g' : undefined)
 }
 
 // The following Regular Expressions can be used for tokenizing,
@@ -21056,13 +21126,13 @@ const createToken = (name, value, isGlobal) => {
 // A single `0`, or a non-zero digit followed by zero or more digits.
 
 createToken('NUMERICIDENTIFIER', '0|[1-9]\\d*')
-createToken('NUMERICIDENTIFIERLOOSE', '[0-9]+')
+createToken('NUMERICIDENTIFIERLOOSE', '\\d+')
 
 // ## Non-numeric Identifier
 // Zero or more digits, followed by a letter or hyphen, and then zero or
 // more letters, digits, or hyphens.
 
-createToken('NONNUMERICIDENTIFIER', '\\d*[a-zA-Z-][a-zA-Z0-9-]*')
+createToken('NONNUMERICIDENTIFIER', `\\d*[a-zA-Z-]${LETTERDASHNUMBER}*`)
 
 // ## Main Version
 // Three dot-separated numeric identifiers.
@@ -21097,7 +21167,7 @@ createToken('PRERELEASELOOSE', `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]
 // ## Build Metadata Identifier
 // Any combination of digits, letters, or hyphens.
 
-createToken('BUILDIDENTIFIER', '[0-9A-Za-z-]+')
+createToken('BUILDIDENTIFIER', `${LETTERDASHNUMBER}+`)
 
 // ## Build Metadata
 // Plus sign, followed by one or more period-separated build metadata

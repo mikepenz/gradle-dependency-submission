@@ -4624,120 +4624,119 @@ export const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT = [
 export const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNRESOLVED = [
   [
     {
-      type: "maven",
-      name: "kotlin-stdlib-jdk8",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib-jdk8',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
+      subpath: null
     },
     {
-      type: "maven",
-      name: "kotlin-stdlib",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
-    },
+      subpath: null
+    }
   ],
   [
     {
-      type: "maven",
-      name: "kotlin-stdlib",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
+      subpath: null
     },
     {
-      type: "maven",
-      name: "annotations",
-      namespace: "org.jetbrains",
-      version: "13.0",
+      type: 'maven',
+      name: 'annotations',
+      namespace: 'org.jetbrains',
+      version: '13.0',
       qualifiers: null,
-      subpath: null,
-    },
+      subpath: null
+    }
   ],
   [
     {
-      type: "maven",
-      name: "kotlin-stdlib",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
+      subpath: null
     },
     {
-      type: "maven",
-      name: "lombok",
-      namespace: "org.projectlombok",
-      version: "",
+      type: 'maven',
+      name: 'lombok',
+      namespace: 'org.projectlombok',
+      version: '',
       qualifiers: null,
-      subpath: null,
-    },
+      subpath: null
+    }
   ],
   [
     {
-      type: "maven",
-      name: "kotlin-stdlib-jdk8",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib-jdk8',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
+      subpath: null
     },
-    undefined,
-  ],
+    undefined
+  ]
 ]
-
 
 export const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_UNSPECIFIED = [
   [
     {
-      type: "maven",
-      name: "kotlin-stdlib-jdk8",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib-jdk8',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
+      subpath: null
     },
     {
-      type: "maven",
-      name: "kotlin-stdlib",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
-    },
+      subpath: null
+    }
   ],
   [
     {
-      type: "maven",
-      name: "kotlin-stdlib",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
+      subpath: null
     },
     {
-      type: "maven",
-      name: "annotations",
-      namespace: "org.jetbrains",
-      version: "13.0",
+      type: 'maven',
+      name: 'annotations',
+      namespace: 'org.jetbrains',
+      version: '13.0',
       qualifiers: null,
-      subpath: null,
-    },
+      subpath: null
+    }
   ],
   [
     {
-      type: "maven",
-      name: "kotlin-stdlib-jdk8",
-      namespace: "org.jetbrains.kotlin",
-      version: "1.6.10",
+      type: 'maven',
+      name: 'kotlin-stdlib-jdk8',
+      namespace: 'org.jetbrains.kotlin',
+      version: '1.6.10',
       qualifiers: null,
-      subpath: null,
+      subpath: null
     },
-    undefined,
-  ],
+    undefined
+  ]
 ]
 
 export const GRADLE_EXAMPLE_DEPENDENCY_OUTPUT_SPRING = [
@@ -5439,88 +5438,88 @@ export const GRADLE_EXAMPLE_DEPENDENCY_WITH_SUB_PROJECTS_OUTPUT = {
 }
 
 export const GRADLE_EXAMPLE_NESTED_MULTI_MODULE_PROJECT = {
-  "childProjects": [
+  childProjects: [
     {
-      "childProjects": [],
-      "dependencyPath": undefined,
-      "name": ":common:hello",
-      "packages": [
+      childProjects: [],
+      dependencyPath: undefined,
+      name: ':common:hello',
+      packages: [
         [
           {
-            "name": "kotlin-stdlib-jdk8",
-            "namespace": "org.jetbrains.kotlin",
-            "qualifiers": null,
-            "subpath": null,
-            "type": "maven",
-            "version": "1.8.0",
+            name: 'kotlin-stdlib-jdk8',
+            namespace: 'org.jetbrains.kotlin',
+            qualifiers: null,
+            subpath: null,
+            type: 'maven',
+            version: '1.8.0'
           },
-          undefined,
-        ],
-      ],
+          undefined
+        ]
+      ]
     },
     {
-      "childProjects": [],
-      "dependencyPath": undefined,
-      "name": ":common:hello",
-      "packages": [
+      childProjects: [],
+      dependencyPath: undefined,
+      name: ':common:hello',
+      packages: [
         [
           {
-            "name": "kotlin-stdlib-jdk8",
-            "namespace": "org.jetbrains.kotlin",
-            "qualifiers": null,
-            "subpath": null,
-            "type": "maven",
-            "version": "1.8.0",
+            name: 'kotlin-stdlib-jdk8',
+            namespace: 'org.jetbrains.kotlin',
+            qualifiers: null,
+            subpath: null,
+            type: 'maven',
+            version: '1.8.0'
           },
-          undefined,
-        ],
-      ],
-    },
+          undefined
+        ]
+      ]
+    }
   ],
-  "dependencyPath": undefined,
-  "name": "test",
-  "packages": [
+  dependencyPath: undefined,
+  name: 'test',
+  packages: [
     [
       {
-        "name": "kotlin-stdlib-jdk8",
-        "namespace": "org.jetbrains.kotlin",
-        "qualifiers": null,
-        "subpath": null,
-        "type": "maven",
-        "version": "1.8.0",
+        name: 'kotlin-stdlib-jdk8',
+        namespace: 'org.jetbrains.kotlin',
+        qualifiers: null,
+        subpath: null,
+        type: 'maven',
+        version: '1.8.0'
       },
-      undefined,
+      undefined
     ],
     [
       {
-        "name": "kotlin-stdlib-jdk8",
-        "namespace": "org.jetbrains.kotlin",
-        "qualifiers": null,
-        "subpath": null,
-        "type": "maven",
-        "version": "1.8.0",
+        name: 'kotlin-stdlib-jdk8',
+        namespace: 'org.jetbrains.kotlin',
+        qualifiers: null,
+        subpath: null,
+        type: 'maven',
+        version: '1.8.0'
       },
-      undefined,
-    ],
+      undefined
+    ]
   ],
-  "projectRegistry": [
+  projectRegistry: [
     {
-      "childProjects": [],
-      "dependencyPath": undefined,
-      "name": ":common:hello",
-      "packages": [
+      childProjects: [],
+      dependencyPath: undefined,
+      name: ':common:hello',
+      packages: [
         [
           {
-            "name": "kotlin-stdlib-jdk8",
-            "namespace": "org.jetbrains.kotlin",
-            "qualifiers": null,
-            "subpath": null,
-            "type": "maven",
-            "version": "1.8.0",
+            name: 'kotlin-stdlib-jdk8',
+            namespace: 'org.jetbrains.kotlin',
+            qualifiers: null,
+            subpath: null,
+            type: 'maven',
+            version: '1.8.0'
           },
-          undefined,
-        ],
-      ],
-    },
-  ],
+          undefined
+        ]
+      ]
+    }
+  ]
 }

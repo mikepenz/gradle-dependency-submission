@@ -121,6 +121,7 @@ The following example showcases a gradle module in the root, without a module na
 | `include-build-environment`  | Optional mode to enable the submission of the `buildEnvironment` as individual Manifest via the dependency submission API. Default: `false`. |
 | `fail-on-error`   | Optional setting to enable an action failure in case any of the dependencies can not be parsed. Default: `false`. |
 | `correlator`  | 'Optional correlator string to submit to GitHub to identify the dependency submission.  Defaults to generating based on gradle-build-module and gradle-build-configuration.' |
+| `legacy-support`  | 'Disabled by default. Optional setting to enable support for gradle versions below 7.5. Warning: When enabled, the action will retrieve all properties and retrieve the property value of interest. During the parsing this may include other properties. Prefer to upgrade to gradle 7.5 or newer instead!' |
 
 | **sub-module-mode**      |    **Description**           |
 | ----- | ---- |

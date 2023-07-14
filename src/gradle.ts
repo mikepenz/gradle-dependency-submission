@@ -132,9 +132,10 @@ export async function retrieveGradleBuildEnvironment(useGradlew: boolean, gradle
 export async function retrieveGradleBuildPath(
   useGradlew: boolean,
   gradleProjectPath: string,
-  gradleBuildModule: string
+  gradleBuildModule: string,
+  legacySupport: boolean
 ): Promise<string | undefined> {
-  return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile')
+  return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile', legacySupport)
 }
 
 /**
@@ -142,9 +143,10 @@ export async function retrieveGradleBuildPath(
  */
 export async function retrieveGradleProjectName(
   useGradlew: boolean,
-  gradleProjectPath: string
+  gradleProjectPath: string,
+  legacySupport: boolean
 ): Promise<string | undefined> {
-  return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name')
+  return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name', legacySupport)
 }
 
 /**
@@ -154,7 +156,8 @@ async function retrieveGradleProperty(
   useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
-  property: string
+  property: string,
+  legacySupport: boolean
 ): Promise<string | undefined> {
   const singlePropertySupported = await singlePropertySupport(useGradlew, gradleProjectPath)
 
@@ -164,8 +167,13 @@ async function retrieveGradleProperty(
   let commandArgs = []
   if (singlePropertySupported) {
     commandArgs = [`${module}:properties`, '-q', '--property', property]
-  } else {
+  } else if (legacySupport) {
     commandArgs = [`${module}:properties`, '-q']
+  } else {
+    core.error(
+      `To enable support for legacy gradle versions without single property support, enable 'legacy-support'. (This will read all properties, read description before proceeding.)`
+    )
+    return undefined
   }
 
   const propertyOutput = await exec.getExecOutput(command, commandArgs, {
@@ -186,7 +194,10 @@ async function retrieveGradleProperty(
   if (singlePropertySupported) {
     matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`))
   } else {
-    matched = output.split('\n').map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`))).find(it=>it !== null)
+    matched = output
+      .split('\n')
+      .map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`)))
+      .find(it => it !== null)
   }
 
   if (matched !== null && matched !== undefined) {

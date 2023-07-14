@@ -16,6 +16,7 @@ async function run(): Promise<void> {
   const includeBuildEnvironment = core.getBooleanInput('include-build-environment')
   const failOnError = core.getBooleanInput('fail-on-error')
   let correlator = core.getInput('correlator')
+  const legacySupport = core.getBooleanInput('legacy-support')
 
   // verify inputs are valid
   if (gradleProjectPath.length === 0) {
@@ -90,7 +91,8 @@ async function run(): Promise<void> {
       gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined,
       moduleBuildConfigurations,
       subModuleMode,
-      failOnError
+      failOnError,
+      legacySupport
     )
     manifests.push(...subManifests)
   }
@@ -100,7 +102,8 @@ async function run(): Promise<void> {
       useGradlew,
       gradleProjectPath[0],
       undefined,
-      failOnError
+      failOnError,
+      legacySupport
     )
     manifests.push(...buildEnvironmentManifest)
   }
