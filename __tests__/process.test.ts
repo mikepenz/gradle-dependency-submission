@@ -1,6 +1,6 @@
-import { jest, describe, test, expect } from '@jest/globals'
-import { prepareDependencyManifest, processBuildEnvironmentDependencyList, processDependencyList } from '../src/process'
-import { BUILD_ENVIRONMENT_EXPECTED_OUTPUT } from './expected_build_env_results'
+import {jest, describe, test, expect} from '@jest/globals'
+import {prepareDependencyManifest, processBuildEnvironmentDependencyList, processDependencyList} from '../src/process'
+import {BUILD_ENVIRONMENT_EXPECTED_OUTPUT} from './expected_build_env_results'
 import {
   EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_INDIVIDUAL,
   EXPECTED_GRADLE_DEPENDENCY_MULTI_LEVEL_OUTPUT_COMBINED,
@@ -8,7 +8,7 @@ import {
   EXPECTED_GRADLE_DEPENDENCY_OUTPUT,
   EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT
 } from './expected_dependency_results'
-import { EXPECTED_GRADLE_DEPENDENCY_UNFILTERED } from './expected_dependency_results_unfiltered'
+import {EXPECTED_GRADLE_DEPENDENCY_UNFILTERED} from './expected_dependency_results_unfiltered'
 
 jest.setTimeout(240000)
 
@@ -41,14 +41,30 @@ describe('processDependencyList', () => {
 
   test('run in gradle-example with invalid configuration', async () => {
     try {
-      await processDependencyList(true, 'gradle-example', ':app', 'non-existing', new Map<string, string>(), 'IGNORE', false)
+      await processDependencyList(
+        true,
+        'gradle-example',
+        ':app',
+        'non-existing',
+        new Map<string, string>(),
+        'IGNORE',
+        false
+      )
     } catch (error: any) {
       expect(error.message).toEqual("Failed to execute './gradlew :app:dependencies --configuration non-existing'")
     }
   })
 
   test('run in root', async () => {
-    const project = await processDependencyList(false, '', ':', 'compileClasspath', new Map<string, string>(), 'IGNORE', false)
+    const project = await processDependencyList(
+      false,
+      '',
+      ':',
+      'compileClasspath',
+      new Map<string, string>(),
+      'IGNORE',
+      false
+    )
     const dependencies = project.packages
     expect(dependencies).toHaveLength(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT.length)
     expect(dependencies).toEqual(EXPECTED_ROOT_GRADLE_DEPENDENCY_OUTPUT)
@@ -106,7 +122,7 @@ describe('prepareDependencyManifest', () => {
       true,
       'gradle-example',
       ':app',
-      "",
+      '',
       undefined,
       new Map<string, string>(),
       'IGNORE',
