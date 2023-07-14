@@ -59,7 +59,7 @@ function singlePropertySupport(useGradlew, gradleProjectPath) {
                 return true;
             }
             else {
-                core.warning(`The current gradle version does not support retrieving a single property. Found version: ${version}. At least required: 7.5.0`);
+                core.warning(`The current gradle version does not support retrieving a single property. Found version: ${version}.`);
                 return false;
             }
         }
@@ -180,12 +180,17 @@ exports.retrieveGradleProjectName = retrieveGradleProjectName;
  */
 function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, property) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!(yield singlePropertySupport(useGradlew, gradleProjectPath))) {
-            return undefined;
-        }
+        const singlePropertySupported = yield singlePropertySupport(useGradlew, gradleProjectPath);
         const command = retrieveGradleCLI(useGradlew);
         const module = verifyModule(gradleBuildModule);
-        const propertyOutput = yield exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
+        let commandArgs = [];
+        if (singlePropertySupported) {
+            commandArgs = [`${module}:properties`, '-q', '--property', property];
+        }
+        else {
+            commandArgs = [`${module}:properties`, '-q'];
+        }
+        const propertyOutput = yield exec.getExecOutput(command, commandArgs, {
             cwd: gradleProjectPath,
             silent: !core.isDebug(),
             ignoreReturnCode: true
@@ -196,8 +201,14 @@ function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule
             throw new Error(`Failed to execute '${command} ${module}:properties'`);
         }
         const output = propertyOutput.stdout;
-        const matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`));
-        if (matched != null) {
+        let matched = null;
+        if (singlePropertySupported) {
+            matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`));
+        }
+        else {
+            matched = output.split('\n').map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`))).find(it => it !== null);
+        }
+        if (matched !== null && matched !== undefined) {
             return matched[2];
         }
         core.warning(`Failed to retrieve the '${property}' for '${gradleBuildModule}'`);
@@ -269,6 +280,9 @@ const dependency_submission_toolkit_1 = __nccwpck_require__(9810);
 const process_1 = __nccwpck_require__(1647);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        core.startGroup('Fork Info');
+        core.debug("Using Online-Photo-Submission fork v1.0.1-rc4");
+        core.endGroup();
         core.startGroup(`📘 Reading input values`);
         const useGradlew = core.getBooleanInput('use-gradlew');
         let gradleProjectPath = core.getMultilineInput('gradle-project-path');
@@ -346,9 +360,9 @@ function run() {
             manifests.push(...buildEnvironmentManifest);
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
-            name: 'mikepenz/gradle-dependency-submission',
-            url: 'https://github.com/mikepenz/gradle-dependency-submission',
-            version: '0.8.2'
+            name: 'online-photo-submission/gradle-dependency-submission',
+            url: 'https://github.com/online-photo-submission/gradle-dependency-submission',
+            version: 'v1.0.1-rc4'
         }, github.context, {
             correlator,
             id: github.context.runId.toString()

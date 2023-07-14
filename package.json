@@ -1,6 +1,6 @@
 {
   "name": "gradle-dependency-submission",
-  "version": "0.8.2",
+  "version": "v1.0.1",
   "private": true,
   "description": "Gradle Dependency Submission",
   "main": "lib/main.js",

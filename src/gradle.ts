@@ -14,7 +14,7 @@ export async function singlePropertySupport(useGradlew: boolean, gradleProjectPa
       return true
     } else {
       core.warning(
-        `The current gradle version does not support retrieving a single property. Found version: ${version}. At least required: 7.5.0`
+        `The current gradle version does not support retrieving a single property. Found version: ${version}.`
       )
       return false
     }
@@ -156,14 +156,19 @@ async function retrieveGradleProperty(
   gradleBuildModule: string,
   property: string
 ): Promise<string | undefined> {
-  if (!(await singlePropertySupport(useGradlew, gradleProjectPath))) {
-    return undefined
-  }
+  const singlePropertySupported = await singlePropertySupport(useGradlew, gradleProjectPath)
 
   const command = retrieveGradleCLI(useGradlew)
   const module = verifyModule(gradleBuildModule)
 
-  const propertyOutput = await exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
+  let commandArgs = []
+  if (singlePropertySupported) {
+    commandArgs = [`${module}:properties`, '-q', '--property', property]
+  } else {
+    commandArgs = [`${module}:properties`, '-q']
+  }
+
+  const propertyOutput = await exec.getExecOutput(command, commandArgs, {
     cwd: gradleProjectPath,
     silent: !core.isDebug(),
     ignoreReturnCode: true
@@ -175,9 +180,16 @@ async function retrieveGradleProperty(
   }
 
   const output = propertyOutput.stdout
-  const matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`))
 
-  if (matched != null) {
+  let matched = null
+
+  if (singlePropertySupported) {
+    matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`))
+  } else {
+    matched = output.split('\n').map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`))).find(it=>it !== null)
+  }
+
+  if (matched !== null && matched !== undefined) {
     return matched[2]
   }
 
