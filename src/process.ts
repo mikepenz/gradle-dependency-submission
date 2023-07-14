@@ -22,7 +22,8 @@ export async function prepareDependencyManifest(
   gradleDependencyPath: string | undefined,
   moduleBuildConfiguration: Map<string, string>,
   subModuleMode: 'INDIVIDUAL' | 'INDIVIDUAL_DEEP' | 'COMBINED' | 'IGNORE',
-  failOnError: boolean
+  failOnError = false,
+  legacySupport = false
 ): Promise<Manifest[]> {
   const rootProject = await processDependencyList(
     useGradlew,
@@ -40,7 +41,7 @@ export async function prepareDependencyManifest(
   // construct the Manifests
   const manifests: Manifest[] = []
   for (const result of transformProject(rootProject, subModuleMode)) {
-    manifests.push(await buildManifest(result, useGradlew, gradleProjectPath))
+    manifests.push(await buildManifest(result, useGradlew, gradleProjectPath, legacySupport))
   }
   return manifests
 }
@@ -52,7 +53,8 @@ export async function prepareBuildEnvironmentManifest(
   useGradlew: boolean,
   gradleProjectPath: string,
   gradleDependencyPath: string | undefined,
-  failOnError: boolean
+  failOnError: boolean,
+  legacySupport: boolean
 ): Promise<Manifest[]> {
   const rootProject = await processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath, failOnError)
 
@@ -62,7 +64,7 @@ export async function prepareBuildEnvironmentManifest(
   // construct the Manifests
   const manifests: Manifest[] = []
   for (const result of transformProject(rootProject, 'COMBINED')) {
-    manifests.push(await buildManifest(result, useGradlew, gradleProjectPath, 'buildEnvironment'))
+    manifests.push(await buildManifest(result, useGradlew, gradleProjectPath, legacySupport, 'buildEnvironment'))
   }
   return manifests
 }
@@ -145,13 +147,14 @@ async function buildManifest(
   result: Result,
   useGradlew: boolean,
   gradleProjectPath: string,
+  legacySupport: boolean,
   manifestName: string | undefined = undefined
 ): Promise<Manifest> {
   const {project, packageCache, directDependencies, indirectDependencies} = result
 
   let dependencyPath: string
   if (project.dependencyPath === undefined) {
-    const buildPath = await retrieveGradleBuildPath(useGradlew, gradleProjectPath, project.name)
+    const buildPath = await retrieveGradleBuildPath(useGradlew, gradleProjectPath, project.name, legacySupport)
     if (buildPath === undefined) {
       core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${project.name}`)
       throw new Error(`Failed to retrieve gradle build path.`)
@@ -166,7 +169,7 @@ async function buildManifest(
   let name = manifestName || path.dirname(dependencyPath)
   if (name === '.') {
     // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
-    name = (await retrieveGradleProjectName(useGradlew, gradleProjectPath)) || dependencyPath
+    name = (await retrieveGradleProjectName(useGradlew, gradleProjectPath, legacySupport)) || dependencyPath
   }
   const manifest = new Manifest(name, dependencyPath)
   core.info(`Connection ${directDependencies.length} direct dependencies`)

@@ -59,7 +59,7 @@ function singlePropertySupport(useGradlew, gradleProjectPath) {
                 return true;
             }
             else {
-                core.warning(`The current gradle version does not support retrieving a single property. Found version: ${version}. At least required: 7.5.0`);
+                core.warning(`The current gradle version does not support retrieving a single property. Found version: ${version}.`);
                 return false;
             }
         }
@@ -160,32 +160,41 @@ exports.retrieveGradleBuildEnvironment = retrieveGradleBuildEnvironment;
 /**
  * Retrieves the `buildFile` `property` from a given `module` name in the configured gradle project.
  */
-function retrieveGradleBuildPath(useGradlew, gradleProjectPath, gradleBuildModule) {
+function retrieveGradleBuildPath(useGradlew, gradleProjectPath, gradleBuildModule, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
-        return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile');
+        return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile', legacySupport);
     });
 }
 exports.retrieveGradleBuildPath = retrieveGradleBuildPath;
 /**
  * Retrieves the `name` `property` from the configured gradle project.
  */
-function retrieveGradleProjectName(useGradlew, gradleProjectPath) {
+function retrieveGradleProjectName(useGradlew, gradleProjectPath, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
-        return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name');
+        return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name', legacySupport);
     });
 }
 exports.retrieveGradleProjectName = retrieveGradleProjectName;
 /**
  * Retrieves the `property` from a given `module` name
  */
-function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, property) {
+function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, property, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (!(yield singlePropertySupport(useGradlew, gradleProjectPath))) {
-            return undefined;
-        }
+        const singlePropertySupported = yield singlePropertySupport(useGradlew, gradleProjectPath);
         const command = retrieveGradleCLI(useGradlew);
         const module = verifyModule(gradleBuildModule);
-        const propertyOutput = yield exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
+        let commandArgs = [];
+        if (singlePropertySupported) {
+            commandArgs = [`${module}:properties`, '-q', '--property', property];
+        }
+        else if (legacySupport) {
+            commandArgs = [`${module}:properties`, '-q'];
+        }
+        else {
+            core.error(`To enable support for legacy gradle versions without single property support, enable 'legacy-support'. (This will read all properties, read description before proceeding.)`);
+            return undefined;
+        }
+        const propertyOutput = yield exec.getExecOutput(command, commandArgs, {
             cwd: gradleProjectPath,
             silent: !core.isDebug(),
             ignoreReturnCode: true
@@ -196,8 +205,17 @@ function retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule
             throw new Error(`Failed to execute '${command} ${module}:properties'`);
         }
         const output = propertyOutput.stdout;
-        const matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`));
-        if (matched != null) {
+        let matched = null;
+        if (singlePropertySupported) {
+            matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`));
+        }
+        else {
+            matched = output
+                .split('\n')
+                .map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`)))
+                .find(it => it !== null);
+        }
+        if (matched !== null && matched !== undefined) {
             return matched[2];
         }
         core.warning(`Failed to retrieve the '${property}' for '${gradleBuildModule}'`);
@@ -281,6 +299,7 @@ function run() {
         const includeBuildEnvironment = core.getBooleanInput('include-build-environment');
         const failOnError = core.getBooleanInput('fail-on-error');
         let correlator = core.getInput('correlator');
+        const legacySupport = core.getBooleanInput('legacy-support');
         // verify inputs are valid
         if (gradleProjectPath.length === 0) {
             core.debug(`No 'gradle-project-path' passed, using 'root'`);
@@ -338,17 +357,17 @@ function run() {
             // else -> use the config for the given item
             const gbcl = gradleBuildConfiguration.length;
             const configuration = gbcl === 0 ? '' : gbcl === 1 ? gradleBuildConfiguration[0] : gradleBuildConfiguration[i];
-            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], configuration, gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode, failOnError);
+            const subManifests = yield (0, process_1.prepareDependencyManifest)(useGradlew, gradleProjectPath.length === 1 ? gradleProjectPath[0] : gradleProjectPath[i], gradleBuildModule[i], configuration, gradleDependencyPath.length !== 0 ? gradleDependencyPath[i] : undefined, moduleBuildConfigurations, subModuleMode, failOnError, legacySupport);
             manifests.push(...subManifests);
         }
         if (includeBuildEnvironment) {
-            const buildEnvironmentManifest = yield (0, process_1.prepareBuildEnvironmentManifest)(useGradlew, gradleProjectPath[0], undefined, failOnError);
+            const buildEnvironmentManifest = yield (0, process_1.prepareBuildEnvironmentManifest)(useGradlew, gradleProjectPath[0], undefined, failOnError, legacySupport);
             manifests.push(...buildEnvironmentManifest);
         }
         const snapshot = new dependency_submission_toolkit_1.Snapshot({
             name: 'mikepenz/gradle-dependency-submission',
             url: 'https://github.com/mikepenz/gradle-dependency-submission',
-            version: '0.8.2'
+            version: 'v1.0.1'
         }, github.context, {
             correlator,
             id: github.context.runId.toString()
@@ -685,7 +704,7 @@ const utils_1 = __nccwpck_require__(918);
 /**
  * Retrieves the dependencies from gradle for the define dmodule and builds the Manifest for it.
  */
-function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode, failOnError) {
+function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, gradleDependencyPath, moduleBuildConfiguration, subModuleMode, failOnError = false, legacySupport = false) {
     return __awaiter(this, void 0, void 0, function* () {
         const rootProject = yield processDependencyList(useGradlew, gradleProjectPath, gradleBuildModule, gradleBuildConfiguration, moduleBuildConfiguration, subModuleMode, failOnError);
         // inject the gradle dependency path into the root project
@@ -693,7 +712,7 @@ function prepareDependencyManifest(useGradlew, gradleProjectPath, gradleBuildMod
         // construct the Manifests
         const manifests = [];
         for (const result of transformProject(rootProject, subModuleMode)) {
-            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath));
+            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath, legacySupport));
         }
         return manifests;
     });
@@ -702,7 +721,7 @@ exports.prepareDependencyManifest = prepareDependencyManifest;
 /**
  * Retrieves the build environment from gradle and builds the Manifest for it.
  */
-function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDependencyPath, failOnError) {
+function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDependencyPath, failOnError, legacySupport) {
     return __awaiter(this, void 0, void 0, function* () {
         const rootProject = yield processBuildEnvironmentDependencyList(useGradlew, gradleProjectPath, failOnError);
         // inject the gradle dependency path into the root project
@@ -710,7 +729,7 @@ function prepareBuildEnvironmentManifest(useGradlew, gradleProjectPath, gradleDe
         // construct the Manifests
         const manifests = [];
         for (const result of transformProject(rootProject, 'COMBINED')) {
-            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath, 'buildEnvironment'));
+            manifests.push(yield buildManifest(result, useGradlew, gradleProjectPath, legacySupport, 'buildEnvironment'));
         }
         return manifests;
     });
@@ -784,12 +803,12 @@ function transformProject(rootProject, subModuleMode) {
 /**
  *
  */
-function buildManifest(result, useGradlew, gradleProjectPath, manifestName = undefined) {
+function buildManifest(result, useGradlew, gradleProjectPath, legacySupport, manifestName = undefined) {
     return __awaiter(this, void 0, void 0, function* () {
         const { project, packageCache, directDependencies, indirectDependencies } = result;
         let dependencyPath;
         if (project.dependencyPath === undefined) {
-            const buildPath = yield (0, gradle_1.retrieveGradleBuildPath)(useGradlew, gradleProjectPath, project.name);
+            const buildPath = yield (0, gradle_1.retrieveGradleBuildPath)(useGradlew, gradleProjectPath, project.name, legacySupport);
             if (buildPath === undefined) {
                 core.setFailed(`🚨 Could not retrieve the gradle dependency path (to the build.gradle) for ${project.name}`);
                 throw new Error(`Failed to retrieve gradle build path.`);
@@ -805,7 +824,7 @@ function buildManifest(result, useGradlew, gradleProjectPath, manifestName = und
         let name = manifestName || path.dirname(dependencyPath);
         if (name === '.') {
             // if no project name is available, retrieve it from gradle or fallback to `dependencyPath`
-            name = (yield (0, gradle_1.retrieveGradleProjectName)(useGradlew, gradleProjectPath)) || dependencyPath;
+            name = (yield (0, gradle_1.retrieveGradleProjectName)(useGradlew, gradleProjectPath, legacySupport)) || dependencyPath;
         }
         const manifest = new dependency_submission_toolkit_1.Manifest(name, dependencyPath);
         core.info(`Connection ${directDependencies.length} direct dependencies`);

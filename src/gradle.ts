@@ -14,7 +14,7 @@ export async function singlePropertySupport(useGradlew: boolean, gradleProjectPa
       return true
     } else {
       core.warning(
-        `The current gradle version does not support retrieving a single property. Found version: ${version}. At least required: 7.5.0`
+        `The current gradle version does not support retrieving a single property. Found version: ${version}.`
       )
       return false
     }
@@ -132,9 +132,10 @@ export async function retrieveGradleBuildEnvironment(useGradlew: boolean, gradle
 export async function retrieveGradleBuildPath(
   useGradlew: boolean,
   gradleProjectPath: string,
-  gradleBuildModule: string
+  gradleBuildModule: string,
+  legacySupport: boolean
 ): Promise<string | undefined> {
-  return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile')
+  return retrieveGradleProperty(useGradlew, gradleProjectPath, gradleBuildModule, 'buildFile', legacySupport)
 }
 
 /**
@@ -142,9 +143,10 @@ export async function retrieveGradleBuildPath(
  */
 export async function retrieveGradleProjectName(
   useGradlew: boolean,
-  gradleProjectPath: string
+  gradleProjectPath: string,
+  legacySupport: boolean
 ): Promise<string | undefined> {
-  return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name')
+  return retrieveGradleProperty(useGradlew, gradleProjectPath, ':', 'name', legacySupport)
 }
 
 /**
@@ -154,16 +156,27 @@ async function retrieveGradleProperty(
   useGradlew: boolean,
   gradleProjectPath: string,
   gradleBuildModule: string,
-  property: string
+  property: string,
+  legacySupport: boolean
 ): Promise<string | undefined> {
-  if (!(await singlePropertySupport(useGradlew, gradleProjectPath))) {
-    return undefined
-  }
+  const singlePropertySupported = await singlePropertySupport(useGradlew, gradleProjectPath)
 
   const command = retrieveGradleCLI(useGradlew)
   const module = verifyModule(gradleBuildModule)
 
-  const propertyOutput = await exec.getExecOutput(command, [`${module}:properties`, '-q', '--property', property], {
+  let commandArgs = []
+  if (singlePropertySupported) {
+    commandArgs = [`${module}:properties`, '-q', '--property', property]
+  } else if (legacySupport) {
+    commandArgs = [`${module}:properties`, '-q']
+  } else {
+    core.error(
+      `To enable support for legacy gradle versions without single property support, enable 'legacy-support'. (This will read all properties, read description before proceeding.)`
+    )
+    return undefined
+  }
+
+  const propertyOutput = await exec.getExecOutput(command, commandArgs, {
     cwd: gradleProjectPath,
     silent: !core.isDebug(),
     ignoreReturnCode: true
@@ -175,9 +188,19 @@ async function retrieveGradleProperty(
   }
 
   const output = propertyOutput.stdout
-  const matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`))
 
-  if (matched != null) {
+  let matched = null
+
+  if (singlePropertySupported) {
+    matched = output.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)\n`))
+  } else {
+    matched = output
+      .split('\n')
+      .map(it => it.match(new RegExp(`[\\S\\s]*?(${property}: )(.+)`)))
+      .find(it => it !== null)
+  }
+
+  if (matched !== null && matched !== undefined) {
     return matched[2]
   }
 
