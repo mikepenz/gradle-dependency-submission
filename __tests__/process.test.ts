@@ -129,7 +129,7 @@ describe('prepareDependencyManifest', () => {
       false
     )
 
-    //expect(manifest).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED.length)
-    expect(JSON.stringify(manifest)).toEqual(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED)
+    expect(manifest).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED.length)
+    expect(JSON.parse(JSON.stringify(manifest))).toEqual(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED)
   })
 })
