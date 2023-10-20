@@ -16,12 +16,21 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             gradle-${{ runner.os }}-
+
       - uses: actions/checkout@v4
-      - name: Set Node.js 16.x
+      - name: Set Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
-          
+          node-version: 20.x
+      
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: |
+            11
+            15
+            17
+    
       - run: |
           npm install
       - run: |
@@ -42,6 +51,14 @@ jobs:
             gradle-${{ runner.os }}-
 
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: |
+            11
+            15
+            17
 
       - name: Test Single Module Project in root
         uses: ./
