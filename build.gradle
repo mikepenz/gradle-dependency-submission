@@ -7,5 +7,5 @@ repositories {
 }
 
 dependencies {
-	implementation "org.springframework:spring-core:5.3.0"
+	implementation "org.springframework:spring-core:5.3.27"
 }

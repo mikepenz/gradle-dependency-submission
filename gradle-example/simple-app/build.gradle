@@ -4,12 +4,13 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 34
 
     defaultConfig {
+        namespace "com.mikepenz.gradleexample"
         applicationId "com.mikepenz.gradleexample"
         minSdk 29
-        targetSdk 32
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 

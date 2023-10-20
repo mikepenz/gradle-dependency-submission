@@ -4,18 +4,20 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 34
     defaultConfig {
         minSdk 29
-        targetSdk 32
+        targetSdk 34
         versionCode 1
         versionName "1.0"
+
+        namespace "com.mikepenz.gradleexample.lib1"
     }
 }
 
 dependencies {
     // define a BOM and its version
-    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
 
     // define any required OkHttp artifacts without version
     api("com.squareup.okhttp3:okhttp")
