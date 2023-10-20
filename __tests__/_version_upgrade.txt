@@ -1,0 +1,682 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. See https://docs.gradle.org/7.5.1/userguide/gradle_daemon.html#sec:disabling_the_daemon.
+Daemon will be stopped at the end of the build 
+
+> Task :dependencies
+
+------------------------------------------------------------
+Root project 'ps-collect-poc-interlok'
+------------------------------------------------------------
+
+interlokRuntime
++--- com.adaptris:interlok-core:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE
+|    |    +--- com.thoughtworks.xstream:xstream:1.4.20
+|    |    |    \--- io.github.x-stream:mxparser:1.2.2
+|    |    |         \--- xmlpull:xmlpull:1.1.3.1
+|    |    \--- jakarta.validation:jakarta.validation-api:2.0.2
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE
+|    |    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    |    +--- com.thoughtworks.xstream:xstream:1.4.20 (*)
+|    |    +--- commons-io:commons-io:2.11.0
+|    |    +--- commons-net:commons-net:3.9.0
+|    |    +--- commons-pool:commons-pool:1.6
+|    |    +--- org.apache.commons:commons-lang3:3.12.0
+|    |    +--- org.apache.commons:commons-pool2:2.11.1
+|    |    +--- org.slf4j:slf4j-api:2.0.6
+|    |    +--- javax.servlet:javax.servlet-api:4.0.1
+|    |    \--- org.eclipse.jetty.aggregate:jetty-all:9.4.49.v20220914
+|    |         +--- org.eclipse.jetty:jetty-client:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-http:9.4.51.v20230217
+|    |         |    |    +--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    |    \--- org.eclipse.jetty:jetty-io:9.4.51.v20230217
+|    |         |    |         \--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    \--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (*)
+|    |         +--- org.eclipse.jetty:jetty-deploy:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-webapp:9.4.51.v20230217
+|    |         |    |    +--- org.eclipse.jetty:jetty-xml:9.4.51.v20230217
+|    |         |    |    |    \--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    |    \--- org.eclipse.jetty:jetty-servlet:9.4.51.v20230217
+|    |         |    |         +--- org.eclipse.jetty:jetty-security:9.4.51.v20230217
+|    |         |    |         |    \--- org.eclipse.jetty:jetty-server:9.4.51.v20230217
+|    |         |    |         |         +--- javax.servlet:javax.servlet-api:3.1.0 -> 4.0.1
+|    |         |    |         |         +--- org.eclipse.jetty:jetty-http:9.4.51.v20230217 (*)
+|    |         |    |         |         \--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (*)
+|    |         |    |         \--- org.eclipse.jetty:jetty-util-ajax:9.4.51.v20230217
+|    |         |    |              \--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    \--- org.eclipse.jetty:jetty-xml:9.4.51.v20230217 (*)
+|    |         +--- org.eclipse.jetty:jetty-jmx:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    \--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         +--- org.eclipse.jetty:jetty-plus:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-webapp:9.4.51.v20230217 (*)
+|    |         |    \--- org.eclipse.jetty:jetty-jndi:9.4.51.v20230217
+|    |         |         \--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         +--- org.eclipse.jetty:jetty-annotations:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-plus:9.4.51.v20230217 (*)
+|    |         |    +--- org.eclipse.jetty:jetty-webapp:9.4.51.v20230217 (*)
+|    |         |    +--- javax.annotation:javax.annotation-api:1.3.2
+|    |         |    +--- org.ow2.asm:asm:9.4
+|    |         |    \--- org.ow2.asm:asm-commons:9.4
+|    |         |         +--- org.ow2.asm:asm:9.4
+|    |         |         \--- org.ow2.asm:asm-tree:9.4
+|    |         |              \--- org.ow2.asm:asm:9.4
+|    |         +--- org.eclipse.jetty:jetty-util:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         +--- org.eclipse.jetty:jetty-jaspi:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-security:9.4.51.v20230217 (*)
+|    |         |    \--- org.eclipse.jetty.orbit:javax.security.auth.message:1.0.0.v201108011116
+|    |         +--- org.eclipse.jetty:jetty-jndi:9.4.49.v20220914 -> 9.4.51.v20230217 (*)
+|    |         +--- org.eclipse.jetty:jetty-rewrite:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-server:9.4.51.v20230217 (*)
+|    |         |    \--- javax.servlet:javax.servlet-api:3.1.0 -> 4.0.1
+|    |         +--- org.eclipse.jetty:jetty-servlets:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-continuation:9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-http:9.4.51.v20230217 (*)
+|    |         |    +--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    \--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (*)
+|    |         +--- org.eclipse.jetty:jetty-quickstart:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-webapp:9.4.51.v20230217 (*)
+|    |         |    +--- org.eclipse.jetty:jetty-jmx:9.4.51.v20230217 (*)
+|    |         |    +--- org.eclipse.jetty:jetty-plus:9.4.51.v20230217 (*)
+|    |         |    +--- org.eclipse.jetty:jetty-annotations:9.4.51.v20230217 (*)
+|    |         |    \--- javax.transaction:javax.transaction-api:1.3
+|    |         +--- org.eclipse.jetty.websocket:websocket-servlet:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty.websocket:websocket-api:9.4.51.v20230217
+|    |         |    \--- javax.servlet:javax.servlet-api:3.1.0 -> 4.0.1
+|    |         +--- org.eclipse.jetty.websocket:javax-websocket-server-impl:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty:jetty-annotations:9.4.51.v20230217 (*)
+|    |         |    +--- org.eclipse.jetty.websocket:javax-websocket-client-impl:9.4.51.v20230217
+|    |         |    |    +--- org.eclipse.jetty.websocket:websocket-client:9.4.51.v20230217
+|    |         |    |    |    +--- org.eclipse.jetty:jetty-client:9.4.51.v20230217 (*)
+|    |         |    |    |    +--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    |    |    +--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (*)
+|    |         |    |    |    \--- org.eclipse.jetty.websocket:websocket-common:9.4.51.v20230217
+|    |         |    |    |         +--- org.eclipse.jetty.websocket:websocket-api:9.4.51.v20230217
+|    |         |    |    |         +--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    |    |         \--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (*)
+|    |         |    |    \--- javax.websocket:javax.websocket-client-api:1.0
+|    |         |    +--- org.eclipse.jetty.websocket:websocket-server:9.4.51.v20230217
+|    |         |    |    +--- org.eclipse.jetty.websocket:websocket-common:9.4.51.v20230217 (*)
+|    |         |    |    +--- org.eclipse.jetty.websocket:websocket-client:9.4.51.v20230217 (*)
+|    |         |    |    +--- org.eclipse.jetty.websocket:websocket-servlet:9.4.51.v20230217 (*)
+|    |         |    |    +--- org.eclipse.jetty:jetty-servlet:9.4.51.v20230217 (*)
+|    |         |    |    \--- org.eclipse.jetty:jetty-http:9.4.51.v20230217 (*)
+|    |         |    \--- javax.websocket:javax.websocket-api:1.0
+|    |         +--- org.eclipse.jetty.websocket:websocket-client:9.4.49.v20220914 -> 9.4.51.v20230217 (*)
+|    |         +--- org.eclipse.jetty:jetty-alpn-client:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    \--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (*)
+|    |         +--- org.eclipse.jetty.http2:http2-server:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty.http2:http2-common:9.4.51.v20230217
+|    |         |    |    \--- org.eclipse.jetty.http2:http2-hpack:9.4.51.v20230217
+|    |         |    |         +--- org.eclipse.jetty:jetty-util:9.4.51.v20230217
+|    |         |    |         +--- org.eclipse.jetty:jetty-http:9.4.51.v20230217 (*)
+|    |         |    |         \--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (*)
+|    |         |    \--- org.eclipse.jetty:jetty-server:9.4.51.v20230217 (*)
+|    |         +--- org.eclipse.jetty.http2:http2-client:9.4.49.v20220914 -> 9.4.51.v20230217
+|    |         |    +--- org.eclipse.jetty.http2:http2-common:9.4.51.v20230217 (*)
+|    |         |    \--- org.eclipse.jetty:jetty-alpn-client:9.4.51.v20230217 (*)
+|    |         +--- javax.websocket:javax.websocket-api:1.0
+|    |         +--- javax.servlet:javax.servlet-api:3.1.0 -> 4.0.1
+|    |         \--- org.slf4j:slf4j-api:1.7.36 -> 2.0.6
+|    +--- com.thoughtworks.xstream:xstream:1.4.20 (*)
+|    +--- org.codehaus.jettison:jettison:1.5.3
+|    +--- io.github.classgraph:classgraph:4.8.116
+|    +--- net.jodah:expiringmap:0.5.10
+|    +--- com.sun.activation:jakarta.activation:1.2.2
+|    +--- org.apache.activemq:activemq-client:5.17.2
+|    |    +--- org.slf4j:slf4j-api:1.7.36 -> 2.0.6
+|    |    +--- org.fusesource.hawtbuf:hawtbuf:1.11
+|    |    \--- org.apache.geronimo.specs:geronimo-j2ee-management_1.1_spec:1.0.1 -> jakarta.management.j2ee:jakarta.management.j2ee-api:1.1.4
+|    +--- jakarta.jms:jakarta.jms-api:2.0.3
+|    +--- org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final
+|    +--- jakarta.validation:jakarta.validation-api:2.0.2
+|    +--- org.hibernate.validator:hibernate-validator:6.1.7.Final
+|    |    +--- jakarta.validation:jakarta.validation-api:2.0.2
+|    |    +--- org.jboss.logging:jboss-logging:3.3.2.Final
+|    |    \--- com.fasterxml:classmate:1.3.4
+|    +--- org.glassfish:javax.el:3.0.1-b12 -> org.glassfish:jakarta.el:3.0.4
+|    +--- commons-io:commons-io:2.11.0
+|    +--- org.apache.commons:commons-lang3:3.12.0
+|    +--- commons-net:commons-net:3.9.0
+|    +--- org.apache.commons:commons-pool2:2.11.1
+|    +--- org.apache.commons:commons-exec:1.3
+|    +--- org.apache.commons:commons-text:1.10.0
+|    |    \--- org.apache.commons:commons-lang3:3.12.0
+|    +--- org.apache.commons:commons-collections4:4.4
+|    +--- org.bouncycastle:bcprov-jdk15on:1.70 -> org.bouncycastle:bcprov-jdk18on:1.72
+|    +--- org.bouncycastle:bcpkix-jdk15on:1.70 -> org.bouncycastle:bcpkix-jdk18on:1.72
+|    |    +--- org.bouncycastle:bcprov-jdk18on:1.72
+|    |    \--- org.bouncycastle:bcutil-jdk18on:1.72
+|    |         \--- org.bouncycastle:bcprov-jdk18on:1.72
+|    +--- org.bouncycastle:bcmail-jdk15on:1.70 -> org.bouncycastle:bcmail-jdk18on:1.72
+|    |    +--- org.bouncycastle:bcprov-jdk18on:1.72
+|    |    +--- org.bouncycastle:bcutil-jdk18on:1.72 (*)
+|    |    \--- org.bouncycastle:bcpkix-jdk18on:1.72 (*)
+|    +--- com.sun.mail:jakarta.mail:1.6.7
+|    |    \--- com.sun.activation:jakarta.activation:1.2.1 -> 1.2.2
+|    +--- org.glassfish.external:opendmk_jmxremote_optional_jar:1.0-b01-ea
+|    +--- org.glassfish.external:opendmk_jdmkrt_jar:1.0-b01-ea
+|    +--- com.github.mwiede:jsch:0.2.5
+|    +--- org.eclipse.jetty.aggregate:jetty-all:9.4.49.v20220914 (*)
+|    +--- javax.servlet:javax.servlet-api:4.0.1
+|    +--- net.sf.joost:joost:0.9.1
+|    +--- org.quartz-scheduler:quartz:2.3.2
+|    |    +--- com.mchange:c3p0:0.9.5.4 -> 0.9.5.5
+|    |    |    \--- com.mchange:mchange-commons-java:0.2.19
+|    |    +--- com.mchange:mchange-commons-java:0.2.15 -> 0.2.19
+|    |    \--- org.slf4j:slf4j-api:1.7.7 -> 2.0.6
+|    +--- com.zaxxer:HikariCP:5.0.1
+|    |    \--- org.slf4j:slf4j-api:1.7.30 -> 2.0.6
+|    +--- net.sf.saxon:Saxon-HE:11.4
+|    |    \--- org.xmlresolver:xmlresolver:4.4.3
+|    |         +--- org.apache.httpcomponents.client5:httpclient5:5.1.3
+|    |         |    +--- org.apache.httpcomponents.core5:httpcore5:5.1.3
+|    |         |    +--- org.apache.httpcomponents.core5:httpcore5-h2:5.1.3
+|    |         |    |    \--- org.apache.httpcomponents.core5:httpcore5:5.1.3
+|    |         |    +--- org.slf4j:slf4j-api:1.7.25 -> 2.0.6
+|    |         |    \--- commons-codec:commons-codec:1.15
+|    |         \--- org.apache.httpcomponents.core5:httpcore5:5.1.3
+|    +--- xerces:xercesImpl:2.12.2
+|    +--- com.mchange:c3p0:0.9.5.5 (*)
+|    +--- org.apache-extras.beanshell:bsh:2.0b6
+|    +--- org.slf4j:slf4j-api:2.0.6
+|    +--- org.apache.derby:derby:10.15.2.0
+|    |    \--- org.apache.derby:derbyshared:10.15.2.0
+|    \--- org.apache.derby:derbytools:10.15.2.0
+|         \--- org.apache.derby:derbyshared:10.15.2.0
++--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
++--- org.slf4j:slf4j-api:2.0.6
++--- com.adaptris:interlok-json:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    +--- org.json:json:20220924
+|    +--- com.jayway.jsonpath:json-path:2.7.0
+|    |    +--- net.minidev:json-smart:2.4.7
+|    |    |    \--- net.minidev:accessors-smart:2.4.7
+|    |    |         \--- org.ow2.asm:asm:9.1 -> 9.4
+|    |    \--- org.slf4j:slf4j-api:1.7.33 -> 2.0.6
+|    +--- com.bazaarvoice.jolt:jolt-core:0.1.7
+|    |    \--- javax.inject:javax.inject:1
+|    +--- com.bazaarvoice.jolt:json-utils:0.1.7
+|    +--- com.fasterxml.jackson.core:jackson-core:2.14.1 -> 2.14.2
+|    |    \--- com.fasterxml.jackson:jackson-bom:2.14.2
+|    |         +--- com.fasterxml.jackson.core:jackson-annotations:2.14.2 (c)
+|    |         +--- com.fasterxml.jackson.core:jackson-core:2.14.2 (c)
+|    |         +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (c)
+|    |         +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2 (c)
+|    |         +--- com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.14.2 (c)
+|    |         +--- com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.14.2 (c)
+|    |         +--- com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.14.2 (c)
+|    |         \--- com.fasterxml.jackson.dataformat:jackson-dataformat-protobuf:2.14.2 (c)
+|    +--- com.fasterxml.jackson.core:jackson-annotations:2.14.1 -> 2.14.2
+|    |    \--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
+|    +--- com.fasterxml.jackson.core:jackson-databind:2.14.1 -> 2.14.2
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.14.2 (*)
+|    |    \--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
+|    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.1 -> 2.14.2
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (*)
+|    |    +--- org.yaml:snakeyaml:1.33 -> 2.0
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.14.2 (*)
+|    |    \--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
+|    +--- commons-collections:commons-collections:3.2.2
+|    +--- commons-beanutils:commons-beanutils:1.9.4
+|    |    \--- commons-collections:commons-collections:3.2.2
+|    +--- com.github.erosb:everit-json-schema:1.14.1
+|    |    +--- org.json:json:20220320 -> 20220924
+|    |    +--- commons-validator:commons-validator:1.7
+|    |    |    +--- commons-digester:commons-digester:2.1
+|    |    |    \--- commons-collections:commons-collections:3.2.2
+|    |    +--- com.damnhandy:handy-uri-templates:2.1.8
+|    |    |    \--- joda-time:joda-time:2.10.2 -> 2.12.0
+|    |    \--- com.google.re2j:re2j:1.6
+|    +--- com.flipkart.zjsonpatch:zjsonpatch:0.4.12
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.12.1 -> 2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.12.1 -> 2.14.2 (*)
+|    |    \--- org.apache.commons:commons-collections4:4.2 -> 4.4
+|    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    +--- net.sf.json-lib:json-lib:2.4
+|    |    +--- commons-beanutils:commons-beanutils:1.8.0 -> 1.9.4 (*)
+|    |    +--- commons-collections:commons-collections:3.2.1 -> 3.2.2
+|    |    +--- commons-lang:commons-lang:2.5
+|    |    \--- net.sf.ezmorph:ezmorph:1.0.6
+|    |         \--- commons-lang:commons-lang:2.3 -> 2.5
+|    +--- xom:xom:1.3.8
+|    +--- xerces:xercesImpl:2.12.2
+|    \--- com.google.guava:guava:31.1-jre
+|         +--- com.google.guava:failureaccess:1.0.1
+|         +--- com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava
+|         +--- com.google.code.findbugs:jsr305:3.0.2
+|         +--- org.checkerframework:checker-qual:3.12.0
+|         +--- com.google.errorprone:error_prone_annotations:2.11.0
+|         \--- com.google.j2objc:j2objc-annotations:1.3
++--- com.adaptris:interlok-csv-schema:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    +--- uk.gov.nationalarchives:csv-validator-java-api:1.1.5
+|    |    +--- org.scala-lang:scala-library:2.11.7 -> 2.11.12
+|    |    +--- org.scalaz:scalaz-core_2.11:7.2.0
+|    |    |    \--- org.scala-lang:scala-library:2.11.7 -> 2.11.12
+|    |    +--- com.github.scala-incubator.io:scala-io-file_2.11:0.4.3-1
+|    |    |    +--- org.scala-lang:scala-library:2.11.0 -> 2.11.12
+|    |    |    +--- com.github.scala-incubator.io:scala-io-core_2.11:0.4.3-1
+|    |    |    |    +--- org.scala-lang:scala-library:2.11.0 -> 2.11.12
+|    |    |    |    +--- org.scala-lang.modules:scala-parser-combinators_2.11:1.0.1 -> 1.0.3
+|    |    |    |    |    \--- org.scala-lang:scala-library:2.11.2 -> 2.11.12
+|    |    |    |    \--- com.madgag:scala-arm_2.11:1.3.3 -> 1.3.4
+|    |    |    |         +--- org.scala-lang:scala-library:2.11.0 -> 2.11.12
+|    |    |    |         \--- org.scala-lang.plugins:scala-continuations-library_2.11:1.0.1 -> 1.0.3
+|    |    |    |              \--- org.scala-lang:scala-library:2.11.11 -> 2.11.12
+|    |    |    \--- org.scala-lang.modules:scala-parser-combinators_2.11:1.0.1 -> 1.0.3 (*)
+|    |    \--- uk.gov.nationalarchives:csv-validator-core:1.1.5
+|    |         +--- org.scala-lang:scala-library:2.11.7 -> 2.11.12
+|    |         +--- org.scala-lang.modules:scala-parser-combinators_2.11:1.0.3 (*)
+|    |         +--- org.scalaz:scalaz-core_2.11:7.2.0 (*)
+|    |         +--- org.scalaz.stream:scalaz-stream_2.11:0.7.3a
+|    |         |    +--- org.scala-lang:scala-library:2.11.7 -> 2.11.12
+|    |         |    +--- org.scalaz:scalaz-core_2.11:7.1.3 -> 7.2.0 (*)
+|    |         |    +--- org.scalaz:scalaz-concurrent_2.11:7.1.3 -> 7.2.0
+|    |         |    |    +--- org.scala-lang:scala-library:2.11.7 -> 2.11.12
+|    |         |    |    +--- org.scalaz:scalaz-core_2.11:7.2.0 (*)
+|    |         |    |    \--- org.scalaz:scalaz-effect_2.11:7.2.0
+|    |         |    |         +--- org.scala-lang:scala-library:2.11.7 -> 2.11.12
+|    |         |    |         \--- org.scalaz:scalaz-core_2.11:7.2.0 (*)
+|    |         |    \--- org.scodec:scodec-bits_2.11:1.0.9
+|    |         |         \--- org.scala-lang:scala-library:2.11.6 -> 2.11.12
+|    |         +--- org.scodec:scodec-bits_2.11:1.0.6 -> 1.0.9 (*)
+|    |         +--- org.scalaz:scalaz-concurrent_2.11:7.2.0 (*)
+|    |         +--- com.github.scala-incubator.io:scala-io-file_2.11:0.4.3-1 (*)
+|    |         +--- com.github.scala-incubator.io:scala-io-core_2.11:0.4.3-1 (*)
+|    |         +--- com.madgag:scala-arm_2.11:1.3.4 (*)
+|    |         +--- joda-time:joda-time:1.6.2 -> 2.12.0
+|    |         +--- com.opencsv:opencsv:3.3
+|    |         |    \--- org.apache.commons:commons-lang3:3.3.2 -> 3.12.0
+|    |         +--- uk.gov.nationalarchives:utf8-validator:1.2
+|    |         \--- commons-io:commons-io:1.3.2 -> 2.11.0
+|    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    +--- org.slf4j:jcl-over-slf4j:2.0.3 -> 2.0.6
+|    |    \--- org.slf4j:slf4j-api:2.0.6
+|    +--- org.scala-lang:scala-library:2.11.12
+|    +--- org.scala-lang.plugins:scala-continuations-library_2.11:1.0.3 (*)
+|    \--- com.gilt:gfc-semver_2.11:0.0.5
+|         \--- org.scala-lang:scala-library:2.11.8 -> 2.11.12
++--- jakarta.xml.bind:jakarta.xml.bind-api:2.3.3
+|    \--- jakarta.activation:jakarta.activation-api:1.2.2 -> com.sun.activation:jakarta.activation:1.2.2
++--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
++--- com.fasterxml.jackson.core:jackson-annotations -> 2.14.2 (*)
++--- com.fasterxml.jackson.core:jackson-databind -> 2.14.2 (*)
++--- com.fasterxml.jackson.module:jackson-module-jaxb-annotations -> 2.14.2
+|    +--- com.fasterxml.jackson.core:jackson-annotations:2.14.2 (*)
+|    +--- com.fasterxml.jackson.core:jackson-core:2.14.2 (*)
+|    +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (*)
+|    +--- jakarta.xml.bind:jakarta.xml.bind-api:2.3.3 (*)
+|    +--- jakarta.activation:jakarta.activation-api:1.2.2 -> com.sun.activation:jakarta.activation:1.2.2
+|    \--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
++--- org.yaml:snakeyaml:2.0
++--- com.adaptris:interlok-boot:4.7.0-RELEASE
++--- com.adaptris:interlok-logging:4.7.0-RELEASE
++--- com.adaptris:interlok-rest-health-check:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-client-jmx:4.7.0-RELEASE
+|    |    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-client:4.7.0-RELEASE
+|    |    |    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    |    |    \--- org.slf4j:slf4j-api:2.0.6
+|    |    \--- org.slf4j:slf4j-api:2.0.6
+|    +--- com.adaptris:interlok-client:4.7.0-RELEASE (*)
+|    \--- com.adaptris:interlok-rest-base:4.7.0-RELEASE
+|         +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|         +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|         +--- com.adaptris:interlok-client-jmx:4.7.0-RELEASE (*)
+|         \--- com.adaptris:interlok-client:4.7.0-RELEASE (*)
++--- com.adaptris:interlok-varsub:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    \--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
++--- org.slf4j:jcl-over-slf4j:2.0.6 (*)
++--- org.slf4j:jul-to-slf4j:2.0.6
+|    \--- org.slf4j:slf4j-api:2.0.6
++--- org.apache.logging.log4j:log4j-bom:2.20.0
+|    +--- org.apache.logging.log4j:log4j-1.2-api:2.20.0 (c)
+|    +--- org.apache.logging.log4j:log4j-api:2.20.0 (c)
+|    +--- org.apache.logging.log4j:log4j-core:2.20.0 (c)
+|    \--- org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0 (c)
++--- org.apache.logging.log4j:log4j-core -> 2.20.0
+|    \--- org.apache.logging.log4j:log4j-api:2.20.0
++--- org.apache.logging.log4j:log4j-1.2-api -> 2.20.0
+|    \--- org.apache.logging.log4j:log4j-api:2.20.0
++--- org.apache.logging.log4j:log4j-slf4j2-impl -> 2.20.0
+|    +--- org.apache.logging.log4j:log4j-api:2.20.0
+|    +--- org.slf4j:slf4j-api:2.0.6
+|    \--- org.apache.logging.log4j:log4j-core:2.20.0 (*)
++--- org.apache.logging.log4j:log4j-api -> 2.20.0
++--- com.sun.mail:jakarta.mail:1.6.7 (*)
++--- org.bouncycastle:bcprov-jdk18on:1.72
++--- org.bouncycastle:bcpkix-jdk18on:1.72 (*)
++--- org.bouncycastle:bcmail-jdk18on:1.72 (*)
++--- jakarta.jms:jakarta.jms-api:2.0.3
++--- jakarta.validation:jakarta.validation-api:2.0.2
++--- com.sun.activation:jakarta.activation:1.2.2
++--- jakarta.management.j2ee:jakarta.management.j2ee-api:1.1.4
++--- com.thoughtworks.xstream:xstream:1.4.20 (*)
++--- org.eclipse.jetty:jetty-bom:9.4.51.v20230217
+|    +--- org.eclipse.jetty:jetty-client:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-deploy:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-jmx:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-plus:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-annotations:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-util:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-jaspi:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-jndi:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-rewrite:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-servlets:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-quickstart:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.websocket:websocket-servlet:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.websocket:javax-websocket-server-impl:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.websocket:websocket-client:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-alpn-client:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.http2:http2-server:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.http2:http2-client:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-http:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-io:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-webapp:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-xml:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-security:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-server:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-continuation:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.websocket:websocket-api:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.websocket:javax-websocket-client-impl:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.websocket:websocket-server:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.websocket:websocket-common:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.http2:http2-common:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty:jetty-servlet:9.4.51.v20230217 (c)
+|    +--- org.eclipse.jetty.http2:http2-hpack:9.4.51.v20230217 (c)
+|    \--- org.eclipse.jetty:jetty-util-ajax:9.4.51.v20230217 (c)
++--- org.apache.commons:commons-text:1.10.0 (*)
++--- commons-net:commons-net:3.9.0
++--- com.fasterxml.jackson.core:jackson-core -> 2.14.2 (*)
++--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml -> 2.14.2 (*)
++--- com.adaptris:interlok-csv:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-stax:4.7.0-RELEASE
+|    |    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    |    \--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    +--- net.sf.supercsv:super-csv:2.4.0
+|    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    \--- org.slf4j:jcl-over-slf4j:2.0.3 -> 2.0.6 (*)
++--- com.adaptris:interlok-csv-json:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-csv:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-json:4.7.0-RELEASE (*)
+|    +--- com.fasterxml.jackson.core:jackson-databind:2.14.1 -> 2.14.2 (*)
+|    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    \--- org.slf4j:jcl-over-slf4j:2.0.3 -> 2.0.6 (*)
++--- com.adaptris:interlok-apache-http:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    +--- org.apache.httpcomponents:httpclient:4.5.13
+|    |    +--- org.apache.httpcomponents:httpcore:4.4.13 -> 4.4.15
+|    |    \--- commons-codec:commons-codec:1.11 -> 1.15
+|    \--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
++--- com.adaptris:interlok-flatfile:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    \--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
++--- com.adaptris:interlok-solace:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    +--- com.solacesystems:sol-common:10.16.0
+|    +--- com.solacesystems:sol-jcsmp:10.16.0
+|    |    +--- org.osgi:org.osgi.annotation:6.0.0
+|    |    \--- org.apache.servicemix.bundles:org.apache.servicemix.bundles.jzlib:1.0.7_2
+|    +--- com.solacesystems:sol-jms:10.16.0
+|    |    +--- org.osgi:org.osgi.annotation:6.0.0
+|    |    +--- org.apache.servicemix.bundles:org.apache.servicemix.bundles.jzlib:1.0.7_2
+|    |    \--- org.apache.geronimo.specs:geronimo-jms_1.1_spec:1.1.1 -> jakarta.jms:jakarta.jms-api:2.0.3
+|    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    \--- net.jodah:expiringmap:0.5.10
++--- com.adaptris:interlok-rest-metrics-profiler:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-client-jmx:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-client:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-rest-base:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-rest-metrics-jvm:4.7.0-RELEASE
+|    |    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-client-jmx:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-client:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-rest-base:4.7.0-RELEASE (*)
+|    |    +--- io.micrometer:micrometer-core:1.9.5
+|    |    |    +--- org.hdrhistogram:HdrHistogram:2.1.12
+|    |    |    \--- org.latencyutils:LatencyUtils:2.0.3
+|    |    \--- io.github.mweirauch:micrometer-jvm-extras:0.2.2
+|    |         +--- io.micrometer:micrometer-core:1.1.19 -> 1.9.5 (*)
+|    |         \--- org.slf4j:slf4j-api:1.7.30 -> 2.0.6
+|    \--- com.adaptris:interlok-profiler:4.7.0-RELEASE
+|         +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|         +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|         +--- org.apache.commons:commons-math3:3.6.1
+|         +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|         +--- org.aspectj:aspectjrt:1.9.9.1
+|         +--- org.aspectj:aspectjweaver:1.9.9.1
+|         \--- org.aspectj:aspectjtools:1.9.9.1
++--- com.adaptris:interlok-rest-metrics-jvm:4.7.0-RELEASE (*)
++--- com.adaptris:interlok-rest-provider-prometheus:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-client-jmx:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-client:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-rest-base:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-rest-metrics-jvm:4.7.0-RELEASE (*)
+|    \--- io.micrometer:micrometer-registry-prometheus:1.9.5
+|         +--- io.micrometer:micrometer-core:1.9.5 (*)
+|         \--- io.prometheus:simpleclient_common:0.15.0
+|              \--- io.prometheus:simpleclient:0.15.0
+|                   +--- io.prometheus:simpleclient_tracer_otel:0.15.0
+|                   |    \--- io.prometheus:simpleclient_tracer_common:0.15.0
+|                   \--- io.prometheus:simpleclient_tracer_otel_agent:0.15.0
+|                        \--- io.prometheus:simpleclient_tracer_common:0.15.0
++--- com.adaptris:interlok-elastic-rest:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-elastic-common:4.7.0-RELEASE
+|    |    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-json:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-csv:4.7.0-RELEASE (*)
+|    |    +--- org.apache.commons:commons-csv:1.9.0
+|    |    +--- net.sf.supercsv:super-csv:2.4.0
+|    |    +--- org.yaml:snakeyaml:1.33 -> 2.0
+|    |    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    |    +--- com.jayway.jsonpath:json-path:2.7.0 (*)
+|    |    +--- commons-collections:commons-collections:3.2.2
+|    |    +--- joda-time:joda-time:2.12.0
+|    |    +--- org.apache.logging.log4j:log4j-api:2.19.0 -> 2.20.0
+|    |    +--- org.elasticsearch:elasticsearch:7.17.6
+|    |    |    +--- org.elasticsearch:elasticsearch-core:7.17.6
+|    |    |    +--- org.elasticsearch:elasticsearch-secure-sm:7.17.6
+|    |    |    +--- org.elasticsearch:elasticsearch-x-content:7.17.6
+|    |    |    |    +--- org.elasticsearch:elasticsearch-core:7.17.6
+|    |    |    |    +--- org.yaml:snakeyaml:1.26 -> 2.0
+|    |    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.10.4 -> 2.14.2 (*)
+|    |    |    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.10.4 -> 2.14.2
+|    |    |    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (*)
+|    |    |    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.14.2 (*)
+|    |    |    |    |    \--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
+|    |    |    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.4 -> 2.14.2 (*)
+|    |    |    |    \--- com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.10.4 -> 2.14.2
+|    |    |    |         +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (*)
+|    |    |    |         +--- com.fasterxml.jackson.core:jackson-core:2.14.2 (*)
+|    |    |    |         \--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
+|    |    |    +--- org.elasticsearch:elasticsearch-geo:7.17.6
+|    |    |    +--- org.elasticsearch:elasticsearch-lz4:7.17.6
+|    |    |    |    +--- org.lz4:lz4-java:1.8.0
+|    |    |    |    \--- org.elasticsearch:elasticsearch-core:7.17.6
+|    |    |    +--- org.apache.lucene:lucene-core:8.11.1 -> 9.4.2
+|    |    |    +--- org.apache.lucene:lucene-analyzers-common:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-backward-codecs:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-grouping:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-highlighter:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-join:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-memory:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-misc:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-queries:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-queryparser:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-sandbox:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-spatial3d:8.11.1
+|    |    |    +--- org.apache.lucene:lucene-suggest:8.11.1
+|    |    |    +--- org.elasticsearch:elasticsearch-cli:7.17.6
+|    |    |    |    +--- net.sf.jopt-simple:jopt-simple:5.0.2
+|    |    |    |    \--- org.elasticsearch:elasticsearch-core:7.17.6
+|    |    |    +--- com.carrotsearch:hppc:0.8.1
+|    |    |    +--- joda-time:joda-time:2.10.10 -> 2.12.0
+|    |    |    +--- com.tdunning:t-digest:3.2
+|    |    |    +--- org.hdrhistogram:HdrHistogram:2.1.9 -> 2.1.12
+|    |    |    +--- net.java.dev.jna:jna:5.10.0
+|    |    |    \--- org.elasticsearch:elasticsearch-plugin-classloader:7.17.6
+|    |    +--- org.apache.lucene:lucene-core:9.4.2
+|    |    +--- org.elasticsearch:elasticsearch-x-content:7.17.6 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.14.1 -> 2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.14.1 -> 2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.1 -> 2.14.2 (*)
+|    |    \--- com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.14.1 -> 2.14.2 (*)
+|    +--- com.adaptris:interlok-apache-http:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-apache-http-async:4.7.0-RELEASE
+|    |    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-apache-http:4.7.0-RELEASE (*)
+|    |    +--- org.apache.httpcomponents:httpasyncclient:4.1.5
+|    |    |    +--- org.apache.httpcomponents:httpcore:4.4.15
+|    |    |    +--- org.apache.httpcomponents:httpcore-nio:4.4.15
+|    |    |    |    \--- org.apache.httpcomponents:httpcore:4.4.15
+|    |    |    \--- org.apache.httpcomponents:httpclient:4.5.13 (*)
+|    |    +--- org.apache.httpcomponents:httpclient:4.5.13 (*)
+|    |    \--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    +--- org.yaml:snakeyaml:1.33 -> 2.0
+|    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    +--- com.jayway.jsonpath:json-path:2.7.0 (*)
+|    +--- commons-collections:commons-collections:3.2.2
+|    +--- joda-time:joda-time:2.12.0
+|    +--- org.apache.logging.log4j:log4j-api:2.19.0 -> 2.20.0
+|    +--- org.elasticsearch.client:elasticsearch-rest-high-level-client:7.17.6
+|    |    +--- org.elasticsearch:elasticsearch:7.17.6 (*)
+|    |    +--- org.elasticsearch.client:elasticsearch-rest-client:7.17.6
+|    |    |    +--- org.apache.httpcomponents:httpclient:4.5.10 -> 4.5.13 (*)
+|    |    |    +--- org.apache.httpcomponents:httpcore:4.4.12 -> 4.4.15
+|    |    |    +--- org.apache.httpcomponents:httpasyncclient:4.1.4 -> 4.1.5 (*)
+|    |    |    +--- org.apache.httpcomponents:httpcore-nio:4.4.12 -> 4.4.15 (*)
+|    |    |    \--- commons-codec:commons-codec:1.11 -> 1.15
+|    |    +--- org.elasticsearch.plugin:mapper-extras-client:7.17.6
+|    |    +--- org.elasticsearch.plugin:parent-join-client:7.17.6
+|    |    +--- org.elasticsearch.plugin:aggs-matrix-stats-client:7.17.6
+|    |    +--- org.elasticsearch.plugin:rank-eval-client:7.17.6
+|    |    \--- org.elasticsearch.plugin:lang-mustache-client:7.17.6
+|    |         \--- com.github.spullara.mustache.java:compiler:0.9.6
+|    +--- org.elasticsearch.client:elasticsearch-rest-client-sniffer:7.17.6
+|    |    +--- org.elasticsearch.client:elasticsearch-rest-client:7.17.6 (*)
+|    |    +--- org.apache.httpcomponents:httpcore:4.4.12 -> 4.4.15
+|    |    \--- com.fasterxml.jackson.core:jackson-core:2.10.4 -> 2.14.2 (*)
+|    +--- org.elasticsearch:elasticsearch-x-content:7.17.6 (*)
+|    +--- commons-codec:commons-codec:1.15
+|    +--- org.apache.httpcomponents:httpclient:4.5.13 (*)
+|    +--- com.fasterxml.jackson.core:jackson-databind:2.14.1 -> 2.14.2 (*)
+|    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.14.1 -> 2.14.2 (*)
+|    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.1 -> 2.14.2 (*)
+|    \--- com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.14.1 -> 2.14.2 (*)
++--- com.telus.adx:adx-interlok-binding:]4.6.999,4.7.999[ -> 4.7.0
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-common:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-json:4.7.0-RELEASE (*)
+|    +--- com.telus.adx:adx-routing:1.8.0
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (*)
+|    |    +--- org.apache.commons:commons-lang3:3.12.0
+|    |    +--- jakarta.validation:jakarta.validation-api:2.0.2
+|    |    +--- org.unbroken-dome.jackson-bean-validation:jackson-bean-validation:0.6.0
+|    |    |    \--- com.fasterxml.jackson.core:jackson-databind:2.11.4 -> 2.14.2 (*)
+|    |    +--- org.slf4j:slf4j-api:2.0.6
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.2 (*)
+|    |    +--- org.projectnessie.cel:cel-tools:0.3.12
+|    |    |    \--- org.projectnessie.cel:cel-core:0.3.12
+|    |    |         +--- org.projectnessie.cel:cel-generated-antlr:0.3.12
+|    |    |         +--- org.agrona:agrona:1.17.1
+|    |    |         \--- org.projectnessie.cel:cel-generated-pb:0.3.12
+|    |    |              \--- com.google.protobuf:protobuf-java:3.21.12
+|    |    +--- org.projectnessie.cel:cel-jackson:0.3.12
+|    |    |    +--- com.fasterxml.jackson:jackson-bom:2.14.1 -> 2.14.2 (*)
+|    |    |    +--- com.fasterxml.jackson.core:jackson-databind -> 2.14.2 (*)
+|    |    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-protobuf -> 2.14.2
+|    |    |    |    +--- com.squareup:protoparser:4.0.3
+|    |    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (*)
+|    |    |    |    +--- com.fasterxml.jackson.core:jackson-core:2.14.2 (*)
+|    |    |    |    \--- com.fasterxml.jackson:jackson-bom:2.14.2 (*)
+|    |    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml -> 2.14.2 (*)
+|    |    |    \--- org.projectnessie.cel:cel-core:0.3.12 (*)
+|    |    +--- com.google.protobuf:protobuf-java:3.21.12
+|    |    +--- org.hibernate.validator:hibernate-validator:6.1.7.Final (*)
+|    |    \--- org.glassfish:javax.el:3.0.1-b12 -> org.glassfish:jakarta.el:3.0.4
+|    +--- com.adaptris:interlok-solace:4.7.0-RELEASE (*)
+|    +--- com.fasterxml.jackson.core:jackson-annotations:2.14.2 (*)
+|    +--- com.fasterxml.jackson.core:jackson-databind:2.14.2 (*)
+|    +--- org.slf4j:slf4j-api:2.0.6
+|    +--- org.apache.commons:commons-text:1.10.0 (*)
+|    +--- commons-net:commons-net:3.9.0
+|    \--- com.thoughtworks.xstream:xstream:1.4.20 (*)
++--- com.adaptris:interlok-aws-s3:4.7.0-RELEASE
+|    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    +--- com.amazonaws:aws-java-sdk-s3:1.12.319 -> 1.12.422
+|    |    +--- com.amazonaws:aws-java-sdk-kms:1.12.422
+|    |    |    +--- com.amazonaws:aws-java-sdk-core:1.12.422
+|    |    |    |    +--- commons-codec:commons-codec:1.15
+|    |    |    |    +--- org.apache.httpcomponents:httpclient:4.5.13 (*)
+|    |    |    |    +--- software.amazon.ion:ion-java:1.0.2
+|    |    |    |    +--- com.fasterxml.jackson.core:jackson-databind:2.12.7.1 -> 2.14.2 (*)
+|    |    |    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.12.6 -> 2.14.2 (*)
+|    |    |    |    \--- joda-time:joda-time:2.8.1 -> 2.12.0
+|    |    |    \--- com.amazonaws:jmespath-java:1.12.422
+|    |    |         \--- com.fasterxml.jackson.core:jackson-databind:2.12.7.1 -> 2.14.2 (*)
+|    |    +--- com.amazonaws:aws-java-sdk-core:1.12.422 (*)
+|    |    \--- com.amazonaws:jmespath-java:1.12.422 (*)
+|    +--- com.amazonaws:aws-java-sdk-core:1.12.319 -> 1.12.422 (*)
+|    +--- com.fasterxml.jackson.core:jackson-databind:2.14.1 -> 2.14.2 (*)
+|    +--- com.fasterxml.jackson.core:jackson-core:2.14.1 -> 2.14.2 (*)
+|    +--- com.fasterxml.jackson.core:jackson-annotations:2.14.1 -> 2.14.2 (*)
+|    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.14.1 -> 2.14.2 (*)
+|    +--- com.adaptris:interlok-aws-common:4.7.0-RELEASE
+|    |    +--- com.adaptris:interlok-core:4.7.0-RELEASE (*)
+|    |    +--- com.adaptris:interlok-core-apt:4.7.0-RELEASE (*)
+|    |    +--- com.amazonaws:aws-java-sdk-core:1.12.319 -> 1.12.422 (*)
+|    |    +--- com.amazonaws:aws-java-sdk-sts:1.12.319 -> 1.12.422
+|    |    |    +--- com.amazonaws:aws-java-sdk-core:1.12.422 (*)
+|    |    |    \--- com.amazonaws:jmespath-java:1.12.422 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-databind:2.14.1 -> 2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-core:2.14.1 -> 2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.core:jackson-annotations:2.14.1 -> 2.14.2 (*)
+|    |    +--- com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.14.1 -> 2.14.2 (*)
+|    |    +--- com.adaptris:interlok-apache-http:4.7.0-RELEASE (*)
+|    |    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    |    \--- org.slf4j:jcl-over-slf4j:2.0.3 -> 2.0.6 (*)
+|    +--- org.slf4j:slf4j-api:2.0.3 -> 2.0.6
+|    \--- org.slf4j:jcl-over-slf4j:2.0.3 -> 2.0.6 (*)
++--- com.adaptris:interlok-aws-common:4.7.0-RELEASE (*)
++--- com.amazonaws:aws-java-sdk-bom:1.12.422
+|    +--- com.amazonaws:aws-java-sdk-s3:1.12.422 (c)
+|    +--- com.amazonaws:aws-java-sdk-core:1.12.422 (c)
+|    +--- com.amazonaws:aws-java-sdk-sts:1.12.422 (c)
+|    +--- com.amazonaws:aws-java-sdk-kms:1.12.422 (c)
+|    \--- com.amazonaws:jmespath-java:1.12.422 (c)
+\--- org.glassfish.jaxb:jaxb-runtime:2.3.6
+     +--- jakarta.xml.bind:jakarta.xml.bind-api:2.3.3 (*)
+     +--- org.glassfish.jaxb:txw2:2.3.6
+     +--- com.sun.istack:istack-commons-runtime:3.0.12
+     \--- com.sun.activation:jakarta.activation:1.2.2
+
+(c) - dependency constraint
+(*) - dependencies omitted (listed previously)
+
+A web-based, searchable dependency report is available by adding the --scan option.
+
+BUILD SUCCESSFUL in 13s
+1 actionable task: 1 executed

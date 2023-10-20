@@ -52,6 +52,7 @@ describe('processDependencyList', () => {
       )
     } catch (error: any) {
       expect(error.message).toEqual("Failed to execute './gradlew :app:dependencies --configuration non-existing'")
+      process.exitCode = 0
     }
   })
 
@@ -130,6 +131,6 @@ describe('prepareDependencyManifest', () => {
     )
 
     expect(manifest).toHaveLength(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED.length)
-    expect(JSON.stringify(manifest)).toEqual(JSON.stringify(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED))
+    expect(JSON.parse(JSON.stringify(manifest))).toEqual(EXPECTED_GRADLE_DEPENDENCY_UNFILTERED)
   })
 })
