@@ -1,3 +1,10 @@
+> [!IMPORTANT]  
+> With the introduction of support for the `Dependency Submission API` into the official [Gradle Build Action](https://github.com/gradle/gradle-build-action?tab=readme-ov-file#github-dependency-graph-support) this project is officially deprecated. 
+> Please consider using the [Gradle Build Action](https://github.com/gradle/gradle-build-action?tab=readme-ov-file#github-dependency-graph-support) for new projects.
+
+-------
+
+
 <div align="center">
   :octocat:
 </div>
@@ -8,13 +15,6 @@
 <p align="center">
     ... calculates dependencies for a Gradle build-target and submits the list to the Dependency Submission API.
 </p>
-
-<div align="center">
-  <a href="https://github.com/mikepenz/gradle-dependency-submission">
-		<img src="https://github.com/mikepenz/gradle-dependency-submission/actions/workflows/test.yml/badge.svg"/>
-	</a>
-</div>
-<br />
 
 -------
 
