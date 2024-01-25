@@ -52,5 +52,5 @@ inputs:
     description: 'Enables support for gradle versions below 7.5. Note: If enabled, all properties are read by the action as `--property` was only introduced in Gradle 7.5 or newer.'
     default: 'false'
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
